@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "言念起始页",
+  "version": "1.0.0",
+  "description": "追求极致纯净与效率的极客浏览器主页。",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}
