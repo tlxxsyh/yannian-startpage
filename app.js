@@ -1,33 +1,12 @@
-// ================= 全局状态 =================
-let isCliMode = localStorage.getItem('yannian_mode') === 'cli';
-let customBg = localStorage.getItem('yannian_bg');
-if (customBg === null) {
-    customBg = 'https://gitee.com/shangyuhang/Course/raw/main/%E5%A3%81%E7%BA%B89.jpg';
-}
-let bookmarks = JSON.parse(localStorage.getItem('yannian_bookmarks')) || [];
-let notes = JSON.parse(localStorage.getItem('yannian_notes')) || [];
-let countdowns = JSON.parse(localStorage.getItem('yannian_cds')) || [];
-let searchHistory = JSON.parse(localStorage.getItem('yannian_history')) || [];
-
-let yannianQuotes = JSON.parse(localStorage.getItem('yannian_quotes')) || [
-    "总之岁月漫长，然而值得等待。——村上春树",
-    "当你做什么事都拖得太久，做的太晚，你就不能期待还有人待在原处等你。",
-    "翻过这座山，便会有人愿意倾听你的故事。",
-    "长夜难免黑凉，前行必有曙光。",
-    "最明亮时总是最迷茫，最繁华时也是最悲凉。——《京华烟云》",
-    "谁信故人千里，此时却到眉尖。",
-    "时来天地皆同力，运去英雄不自由。"
-];
-
+// ================= 全局变量声明 =================
+let isCliMode, isFirstRun, customBg, bookmarks, notes, countdowns, searchHistory, showSeconds, yannianQuotes;
 let currentFolderPath = '';
 let editingBmIndex = -1;
 let inlineEditingNoteIndex = -1;
-
-// CLI 模式专属变量
 let cliCurrentBmPath = '';
-let cliCurrentViewItems = []; // 存储当前 CLI 视图下的文件树节点映射
+let cliCurrentViewItems = [];
+let customEngines, currentEngineIdx;
 
-// 扩充默认搜索引擎列表
 const defaultEngines = [
     { name: 'Bing', url: 'https://cn.bing.com/search?q=', icon: 'https://www.bing.com/favicon.ico' },
     { name: 'Baidu', url: 'https://www.baidu.com/s?wd=', icon: 'https://www.baidu.com/favicon.ico' },
@@ -39,36 +18,155 @@ const defaultEngines = [
     { name: '小黑盒', url: 'https://www.xiaoheihe.cn/app/search?q=', icon: 'https://www.xiaoheihe.cn/favicon.ico' }
 ];
 
-let customEngines = JSON.parse(localStorage.getItem('yannian_engines')) || [...defaultEngines];
-let currentEngineIdx = parseInt(localStorage.getItem('yannian_engine')) || 0;
-if (currentEngineIdx >= customEngines.length) currentEngineIdx = 0;
-
 const iconDelStr = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 const iconEditStr = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const iconFolder = `<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
 const iconHome = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 
+// ================= 智能图标防爬虫拦截解析器 =================
+function getFaviconUrl(url, size = 64) {
+    try {
+        let validUrl = url.startsWith('http') ? url : 'https://' + url;
+        const domain = new URL(validUrl).hostname;
+
+        if (domain.includes('xiaohongshu.com')) return 'https://www.xiaohongshu.com/favicon.ico';
+        if (domain.includes('bilibili.com')) return 'https://www.bilibili.com/favicon.ico';
+        if (domain.includes('zhihu.com')) return 'https://static.zhihu.com/heifetz/favicon.ico';
+        if (domain.includes('github.com')) return 'https://github.com/favicon.ico';
+
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+    } catch (e) {
+        return 'https://www.google.com/favicon.ico';
+    }
+}
+
+// ================= 终极数据防掉失引擎 (Chrome Extension Sandbox API) =================
+function safeParse(str, defaultVal) {
+    if (!str) return defaultVal;
+    try { return JSON.parse(str); } catch (e) { return defaultVal; }
+}
+
+function saveData(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { }
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        let obj = {}; obj[key] = value;
+        chrome.storage.local.set(obj);
+    }
+}
+
+async function bootApp() {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        await new Promise(resolve => {
+            chrome.storage.local.get(null, (data) => {
+                data = data || {};
+                if (Object.keys(data).length === 0) {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        let key = localStorage.key(i);
+                        if (key && key.startsWith('yannian_')) {
+                            let obj = {}; obj[key] = localStorage.getItem(key);
+                            chrome.storage.local.set(obj);
+                        }
+                    }
+                } else {
+                    for (let k in data) {
+                        try { localStorage.setItem(k, data[k]); } catch (e) { }
+                    }
+                }
+                resolve();
+            });
+        });
+    }
+
+    isCliMode = localStorage.getItem('yannian_mode') === 'cli';
+    isFirstRun = localStorage.getItem('yannian_init') !== '1';
+    customBg = localStorage.getItem('yannian_bg');
+    bookmarks = safeParse(localStorage.getItem('yannian_bookmarks'), null);
+
+    if (isFirstRun || (!customBg && !bookmarks)) {
+        customBg = 'https://gitee.com/shangyuhang/Course/raw/main/%E5%A3%81%E7%BA%B89.jpg';
+        saveData('yannian_bg', customBg);
+
+        if (!bookmarks || bookmarks.length === 0) {
+            bookmarks = [
+                { name: 'DeepSeek', url: 'https://chat.deepseek.com', cat: '' },
+                { name: 'Bilibili', url: 'https://www.bilibili.com', cat: '' },
+                { name: '小红书', url: 'https://www.xiaohongshu.com', cat: '' },
+                { name: '知乎', url: 'https://www.zhihu.com', cat: '' }
+            ];
+            saveData('yannian_bookmarks', JSON.stringify(bookmarks));
+        }
+        saveData('yannian_init', '1');
+    } else {
+        bookmarks = bookmarks || [];
+    }
+
+    notes = safeParse(localStorage.getItem('yannian_notes'), []);
+    countdowns = safeParse(localStorage.getItem('yannian_cds'), []);
+    searchHistory = safeParse(localStorage.getItem('yannian_history'), []);
+    showSeconds = localStorage.getItem('yannian_show_seconds') !== 'false';
+
+    yannianQuotes = safeParse(localStorage.getItem('yannian_quotes'), [
+        "总之岁月漫长，然而值得等待。——村上春树",
+        "当你做什么事都拖得太久，做的太晚，你就不能期待还有人待在原处等你。",
+        "翻过这座山，便会有人愿意倾听你的故事。",
+        "长夜难免黑凉，前行必有曙光。",
+        "最明亮时总是最迷茫，最繁华时也是最悲凉。——《京华烟云》",
+        "谁信故人千里，此时却到眉尖。",
+        "时来天地皆同力，运去英雄不自由。"
+    ]);
+
+    customEngines = safeParse(localStorage.getItem('yannian_engines'), [...defaultEngines]);
+    currentEngineIdx = parseInt(localStorage.getItem('yannian_engine')) || 0;
+    if (currentEngineIdx >= customEngines.length) currentEngineIdx = 0;
+
+    init();
+}
+
 function init() {
+    updateClock();
+    document.getElementById('gui-clock').style.visibility = 'visible';
+    setInterval(updateClock, 1000);
+
     loadThemeColor();
     if (customBg) document.getElementById('app-bg').style.backgroundImage = `url('${customBg}')`;
+
+    document.getElementById('toggle-show-seconds').checked = showSeconds;
+
     updateEngineView();
     renderBookmarksView();
     renderNotes();
     renderCountdowns();
     renderEngines();
+    renderDock();
     initQuotesPanel();
     loadDesktopSettings();
     toggleModeView();
 }
 
-// ================= 主题色动态管理 =================
+bootApp();
+
+function updateClock() {
+    const now = new Date();
+    const options = { hour: '2-digit', minute: '2-digit' };
+    if (showSeconds) {
+        options.second = '2-digit';
+    }
+    document.getElementById('gui-clock').textContent = now.toLocaleTimeString('zh-CN', options);
+}
+
+document.getElementById('toggle-show-seconds').addEventListener('change', (e) => {
+    showSeconds = e.target.checked;
+    saveData('yannian_show_seconds', showSeconds);
+    updateClock();
+});
+
 function setThemeColor(hex) {
     document.documentElement.style.setProperty('--theme-color', hex);
     let r = parseInt(hex.slice(1, 3), 16) || 229;
     let g = parseInt(hex.slice(3, 5), 16) || 152;
     let b = parseInt(hex.slice(5, 7), 16) || 80;
     document.documentElement.style.setProperty('--theme-rgb', `${r}, ${g}, ${b}`);
-    localStorage.setItem('yannian_theme', hex);
+    saveData('yannian_theme', hex);
 }
 function loadThemeColor() {
     const savedTheme = localStorage.getItem('yannian_theme') || '#E59850';
@@ -81,12 +179,11 @@ document.getElementById('btn-reset-theme').addEventListener('click', () => {
     document.getElementById('theme-color-input').value = '#E59850';
 });
 
-// ================= 全局基础交互 =================
 function toggleModeView() {
     document.getElementById('gui-mode').classList.toggle('active', !isCliMode);
     document.getElementById('cli-mode').classList.toggle('active', isCliMode);
     isCliMode ? document.getElementById('cli-input').focus() : document.getElementById('gui-search-input').blur();
-    localStorage.setItem('yannian_mode', isCliMode ? 'cli' : 'gui');
+    saveData('yannian_mode', isCliMode ? 'cli' : 'gui');
 }
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === '/') { isCliMode = !isCliMode; toggleModeView(); }
@@ -94,7 +191,7 @@ document.addEventListener('keydown', (e) => {
 
 const centralHub = document.getElementById('central-hub');
 window.addEventListener('contextmenu', (e) => {
-    if (isCliMode || e.target.closest('.desktop-zone') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (isCliMode || e.target.closest('.desktop-zone') || e.target.closest('#dock-container') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     e.preventDefault();
     centralHub.classList.remove('hidden');
 });
@@ -112,11 +209,28 @@ document.querySelectorAll('.hub-sidebar .nav-btn[data-target]').forEach(btn => {
     });
 });
 
+function renderDock() {
+    const dockInner = document.getElementById('dock-inner');
+    dockInner.innerHTML = '';
 
-// ================= GUI: 搜索与下拉选择引擎 =================
-setInterval(() => {
-    document.getElementById('gui-clock').textContent = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}, 1000);
+    const rootBookmarks = bookmarks.filter(bm => !bm.cat || bm.cat === '');
+
+    if (rootBookmarks.length === 0) {
+        document.getElementById('dock-container').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('dock-container').style.display = 'block';
+    rootBookmarks.forEach(bm => {
+        const iconSrc = getFaviconUrl(bm.url, 64);
+        const div = document.createElement('div');
+        div.className = 'dock-item';
+        div.title = bm.name;
+        div.innerHTML = `<img src="${iconSrc}" onerror="this.src='https://www.google.com/favicon.ico'">`;
+        div.onclick = () => window.location.href = bm.url;
+        dockInner.appendChild(div);
+    });
+}
 
 const searchInput = document.getElementById('gui-search-input');
 const engineToggle = document.getElementById('engine-toggle');
@@ -129,7 +243,7 @@ function updateEngineView() {
     const engine = customEngines[currentEngineIdx];
     engineIcon.src = engine.icon;
     engineIcon.alt = engine.name;
-    localStorage.setItem('yannian_engine', currentEngineIdx);
+    saveData('yannian_engine', currentEngineIdx);
 }
 
 function renderEngineDropdown() {
@@ -170,7 +284,7 @@ searchInput.addEventListener('keydown', (e) => {
             searchHistory = searchHistory.filter(item => item !== query);
             searchHistory.unshift(query);
             if (searchHistory.length > 15) searchHistory.pop();
-            localStorage.setItem('yannian_history', JSON.stringify(searchHistory));
+            saveData('yannian_history', JSON.stringify(searchHistory));
             window.location.href = customEngines[currentEngineIdx].url + encodeURIComponent(query);
         }
     }
@@ -178,9 +292,7 @@ searchInput.addEventListener('keydown', (e) => {
 
 function renderSearchHistory() {
     historyList.innerHTML = '';
-    if (searchHistory.length === 0) {
-        return;
-    }
+    if (searchHistory.length === 0) return;
 
     searchHistory.forEach((query, idx) => {
         const div = document.createElement('div');
@@ -197,12 +309,20 @@ function renderSearchHistory() {
         div.querySelector('.del-history-btn').addEventListener('mousedown', (e) => {
             e.preventDefault();
             searchHistory.splice(idx, 1);
-            localStorage.setItem('yannian_history', JSON.stringify(searchHistory));
+            saveData('yannian_history', JSON.stringify(searchHistory));
             renderSearchHistory();
         });
         historyList.appendChild(div);
     });
 }
+
+document.getElementById('clear-history-bar').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    searchHistory = [];
+    saveData('yannian_history', JSON.stringify(searchHistory));
+    renderSearchHistory();
+    historyDropdown.classList.add('hidden');
+});
 
 const appBg = document.getElementById('app-bg');
 const hitokotoContainer = document.getElementById('hitokoto-container');
@@ -230,7 +350,6 @@ searchInput.addEventListener('blur', () => {
     setTimeout(() => { historyDropdown.classList.add('hidden'); }, 150);
 });
 
-// ================= GUI: 专属一言面板管理 =================
 function initQuotesPanel() {
     const textarea = document.getElementById('quotes-textarea');
     textarea.value = yannianQuotes.join('\n');
@@ -238,13 +357,11 @@ function initQuotesPanel() {
     document.getElementById('btn-save-quotes').addEventListener('click', () => {
         const rawText = textarea.value;
         yannianQuotes = rawText.split('\n').map(q => q.trim()).filter(q => q);
-        localStorage.setItem('yannian_quotes', JSON.stringify(yannianQuotes));
+        saveData('yannian_quotes', JSON.stringify(yannianQuotes));
         alert('专属一言保存成功！');
     });
 }
 
-
-// ================= GUI: 自定义搜索引擎管理 =================
 const engineListContainer = document.getElementById('engine-list');
 function renderEngines() {
     engineListContainer.innerHTML = '';
@@ -269,7 +386,7 @@ function renderEngines() {
             const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
             customEngines.splice(idx, 1);
             if (currentEngineIdx >= customEngines.length) currentEngineIdx = 0;
-            localStorage.setItem('yannian_engines', JSON.stringify(customEngines));
+            saveData('yannian_engines', JSON.stringify(customEngines));
             updateEngineView();
             renderEngines();
         });
@@ -291,7 +408,7 @@ document.getElementById('btn-add-engine').addEventListener('click', () => {
             }
         }
         customEngines.push({ name, url, icon });
-        localStorage.setItem('yannian_engines', JSON.stringify(customEngines));
+        saveData('yannian_engines', JSON.stringify(customEngines));
         renderEngines();
         document.getElementById('engine-name').value = '';
         document.getElementById('engine-url').value = '';
@@ -301,8 +418,6 @@ document.getElementById('btn-add-engine').addEventListener('click', () => {
     }
 });
 
-
-// ================= GUI: 书签管理 (树状结构 + 面包屑导航) =================
 const foldersView = document.getElementById('bm-folders-view');
 const itemsView = document.getElementById('bm-items-view');
 const breadcrumbsContainer = document.getElementById('bm-breadcrumbs');
@@ -368,7 +483,7 @@ function renderBookmarksView() {
         }
     });
 
-    if (subFolders.size > 0) {
+    if (subFolders.size > 0 || currentFolderPath === '') {
         foldersView.classList.remove('hidden');
         subFolders.forEach(folderName => {
             const targetPath = currentFolderPath === '' ? folderName : currentFolderPath + '/' + folderName;
@@ -392,7 +507,7 @@ function renderBookmarksView() {
         itemsView.classList.remove('hidden');
         let htmlContent = '';
         currentItems.forEach((bm) => {
-            const iconSrc = `https://www.google.com/s2/favicons?domain=${bm.url}&sz=32`;
+            const iconSrc = getFaviconUrl(bm.url, 32);
             htmlContent += `
                 <div class="item-card">
                     <div class="item-info">
@@ -424,10 +539,12 @@ function renderBookmarksView() {
         viewDivider.classList.add('hidden');
     }
 
-    if (subFolders.size === 0 && currentItems.length === 0) {
+    if (subFolders.size === 0 && currentItems.length === 0 && currentFolderPath !== '') {
         foldersView.classList.remove('hidden');
         foldersView.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: rgba(255,255,255,0.3); padding: 30px;">此目录下空空如也</div>`;
     }
+
+    renderDock();
 }
 
 document.getElementById('btn-add-bm-modal').addEventListener('click', () => openBmModal(-1));
@@ -462,7 +579,7 @@ document.getElementById('btn-save-bm').addEventListener('click', () => {
         } else {
             bookmarks.push({ name, url, cat });
         }
-        localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
+        saveData('yannian_bookmarks', JSON.stringify(bookmarks));
         bmModal.classList.add('hidden');
         renderBookmarksView();
     }
@@ -470,7 +587,7 @@ document.getElementById('btn-save-bm').addEventListener('click', () => {
 
 function delBookmark(idx) {
     bookmarks.splice(idx, 1);
-    localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
+    saveData('yannian_bookmarks', JSON.stringify(bookmarks));
     renderBookmarksView();
 }
 
@@ -497,7 +614,7 @@ document.getElementById('bm-import-input').addEventListener('change', function (
             const imported = JSON.parse(e.target.result);
             if (Array.isArray(imported)) {
                 bookmarks = imported;
-                localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
+                saveData('yannian_bookmarks', JSON.stringify(bookmarks));
                 currentFolderPath = '';
                 renderBookmarksView();
                 alert('书签导入成功！');
@@ -508,8 +625,6 @@ document.getElementById('bm-import-input').addEventListener('change', function (
     this.value = '';
 });
 
-
-// ================= GUI: 备忘录逻辑 (自动伸缩就地编辑) =================
 function renderNotes() {
     const hubList = document.getElementById('note-list');
     const dtList = document.getElementById('desktop-left-zone');
@@ -519,7 +634,6 @@ function renderNotes() {
 
     notes.forEach((note, idx) => {
         const safeNote = String(note);
-
         if (idx === inlineEditingNoteIndex) {
             hubHtml += `
                 <div class="item-card" style="flex-direction: column; align-items: stretch; gap: 12px; border-color: var(--theme-color);">
@@ -555,7 +669,6 @@ function renderNotes() {
         btn.addEventListener('click', (e) => {
             inlineEditingNoteIndex = parseInt(e.currentTarget.getAttribute('data-idx'));
             renderNotes();
-
             const textarea = document.getElementById(`inline-note-${inlineEditingNoteIndex}`);
             if (textarea) {
                 textarea.focus();
@@ -574,7 +687,7 @@ function renderNotes() {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
             notes.splice(idx, 1);
-            localStorage.setItem('yannian_notes', JSON.stringify(notes));
+            saveData('yannian_notes', JSON.stringify(notes));
             renderNotes();
         });
     });
@@ -595,7 +708,7 @@ function renderNotes() {
             } else {
                 notes.splice(idx, 1);
             }
-            localStorage.setItem('yannian_notes', JSON.stringify(notes));
+            saveData('yannian_notes', JSON.stringify(notes));
             inlineEditingNoteIndex = -1;
             renderNotes();
         });
@@ -606,14 +719,12 @@ document.getElementById('btn-add-note').addEventListener('click', () => {
     const text = document.getElementById('hub-note-input').value.trim();
     if (text) {
         notes.unshift(text);
-        localStorage.setItem('yannian_notes', JSON.stringify(notes));
+        saveData('yannian_notes', JSON.stringify(notes));
         renderNotes();
         document.getElementById('hub-note-input').value = '';
     }
 });
 
-
-// ================= GUI: 倒数日阵列 =================
 function renderCountdowns() {
     const hubList = document.getElementById('hub-cd-list');
     const dtList = document.getElementById('desktop-right-zone');
@@ -638,7 +749,6 @@ function renderCountdowns() {
                 </div>
             </div>
         `;
-
         dtHtml += `
             <div class="dt-card">
                 <div class="dt-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${cd.title}</span></div>
@@ -654,7 +764,7 @@ function renderCountdowns() {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
             countdowns.splice(idx, 1);
-            localStorage.setItem('yannian_cds', JSON.stringify(countdowns));
+            saveData('yannian_cds', JSON.stringify(countdowns));
             renderCountdowns();
         });
     });
@@ -666,13 +776,11 @@ document.getElementById('btn-add-cd').addEventListener('click', () => {
     const dateStr = prompt("请输入目标日期 (格式 YYYY-MM-DD):");
     if (dateStr && !isNaN(new Date(dateStr).getTime())) {
         countdowns.push({ title, date: dateStr });
-        localStorage.setItem('yannian_cds', JSON.stringify(countdowns));
+        saveData('yannian_cds', JSON.stringify(countdowns));
         renderCountdowns();
     } else { alert("日期格式有误"); }
 });
 
-
-// ================= GUI: 挂件开关 =================
 const toggleDtCd = document.getElementById('toggle-dt-cd');
 const toggleDtNote = document.getElementById('toggle-dt-note');
 const desktopCdZone = document.getElementById('desktop-right-zone');
@@ -687,22 +795,25 @@ function loadDesktopSettings() {
     showNote ? desktopNoteZone.classList.remove('hidden') : desktopNoteZone.classList.add('hidden');
 }
 toggleDtCd.addEventListener('change', () => {
-    localStorage.setItem('yannian_show_cd', toggleDtCd.checked);
+    saveData('yannian_show_cd', toggleDtCd.checked);
     loadDesktopSettings();
 });
 toggleDtNote.addEventListener('change', () => {
-    localStorage.setItem('yannian_show_note', toggleDtNote.checked);
+    saveData('yannian_show_note', toggleDtNote.checked);
     loadDesktopSettings();
 });
 
-
-// ================= GUI: 壁纸设置 =================
 const bgUrlInput = document.getElementById('bg-url-input');
 const bgFileInput = document.getElementById('bg-file-input');
 
 function applyBackground(url) {
     appBg.style.backgroundImage = url ? `url('${url}')` : '';
-    localStorage.setItem('yannian_bg', url);
+    try {
+        saveData('yannian_bg', url);
+    } catch (e) {
+        alert('保存失败！图片过大超出浏览器限制。');
+        appBg.style.backgroundImage = '';
+    }
 }
 
 document.getElementById('btn-save-bg').addEventListener('click', () => applyBackground(bgUrlInput.value.trim()));
@@ -712,20 +823,20 @@ document.getElementById('btn-upload-local').addEventListener('click', () => bgFi
 bgFileInput.addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
-        if (file.size > 4 * 1024 * 1024) return alert('图片过大，请选择 4MB 以内的图片。');
+        if (file.size > 1.5 * 1024 * 1024) {
+            return alert('图片过大。受限于浏览器本地存储机制，请选择大小在 1.5MB 以内的图片。');
+        }
         const reader = new FileReader();
         reader.onload = e => applyBackground(e.target.result);
         reader.readAsDataURL(file);
     }
+    this.value = '';
 });
 
-
-// ================= CLI: 极客终端引擎 =================
 const cliInput = document.getElementById('cli-input');
 const cliOutput = document.getElementById('cli-output');
 const terminalContainer = document.querySelector('.terminal-container');
 
-// 自动补全指令
 const availableCommands = [
     'help', 'gui', 'clear', 'time', 'search ',
     'bm ls', 'bm add ', 'bm rm ', 'bm edit ', '..',
@@ -741,20 +852,14 @@ cliInput.addEventListener('keydown', (e) => {
         if (match) cliInput.value = match;
         return;
     }
-
     if (e.key === 'Enter') {
         const cmd = cliInput.value.trim();
         if (!cmd) return;
-
         appendCliOutput(`<span class="cli-prompt">yannian@home:~$</span> ${cmd}`);
 
-        if (/^\d+$/.test(cmd)) {
-            handleCliBmAction(parseInt(cmd));
-        } else if (cmd === '..') {
-            handleCliBmUp();
-        } else {
-            parseCommand(cmd);
-        }
+        if (/^\d+$/.test(cmd)) { handleCliBmAction(parseInt(cmd)); }
+        else if (cmd === '..') { handleCliBmUp(); }
+        else { parseCommand(cmd); }
 
         cliInput.value = '';
         terminalContainer.scrollTop = terminalContainer.scrollHeight;
@@ -767,13 +872,11 @@ function appendCliOutput(htmlText) {
     cliOutput.appendChild(div);
 }
 
-// 核心命令解析器
 function parseCommand(cmd) {
     const args = cmd.split(' ').filter(Boolean);
     const c = args[0].toLowerCase();
     const subC = args[1] ? args[1].toLowerCase() : '';
 
-    // --- 基础控制 ---
     if (c === 'help') {
         appendCliOutput(`
             <br><span class="cli-info">Yannian Terminal Commands:</span><br>
@@ -805,27 +908,16 @@ function parseCommand(cmd) {
             quote ls                 - 查看专属一言库<br>
         `);
     }
-    else if (c === 'gui') {
-        isCliMode = false; toggleModeView();
-    }
-    else if (c === 'clear') {
-        cliOutput.innerHTML = '';
-    }
-    else if (c === 'time') {
-        const t = new Date().toLocaleString('zh-CN');
-        appendCliOutput(`<span class="cli-info">当前时间:</span> ${t}`);
-    }
+    else if (c === 'gui') { isCliMode = false; toggleModeView(); }
+    else if (c === 'clear') { cliOutput.innerHTML = ''; }
+    else if (c === 'time') { appendCliOutput(`<span class="cli-info">当前时间:</span> ${new Date().toLocaleString('zh-CN')}`); }
     else if (c === 'search') {
         const query = args.slice(1).join(' ');
         if (query) {
             appendCliOutput(`<span class="cli-info">正在搜索:</span> ${query}`);
             window.location.href = customEngines[currentEngineIdx].url + encodeURIComponent(query);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 缺少搜索词。用法: search [内容]`);
-        }
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 缺少搜索词。`); }
     }
-
-    // --- 搜索引擎管理 ---
     else if (c === 'engine' && subC === 'ls') {
         let out = "<br>";
         customEngines.forEach((eng, i) => {
@@ -837,19 +929,13 @@ function parseCommand(cmd) {
     else if (c === 'engine' && subC === 'set') {
         const idx = parseInt(args[2]);
         if (!isNaN(idx) && customEngines[idx]) {
-            currentEngineIdx = idx;
-            updateEngineView();
-            appendCliOutput(`<span class="cli-success">成功:</span> 搜索引擎已切换至 [${customEngines[idx].name}]。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 无效的引擎编号。`);
-        }
+            currentEngineIdx = idx; updateEngineView();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已切换至 [${customEngines[idx].name}]。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 无效编号。`); }
     }
-
-    // --- 备忘录管理 ---
     else if (c === 'note' && subC === 'ls') {
-        if (notes.length === 0) {
-            appendCliOutput("暂无备忘录。");
-        } else {
+        if (notes.length === 0) { appendCliOutput("暂无备忘录。"); }
+        else {
             let out = "<br>";
             notes.forEach((n, i) => out += `[<span class="cli-success">${i}</span>] ${n}<br>`);
             appendCliOutput(out);
@@ -858,142 +944,85 @@ function parseCommand(cmd) {
     else if (c === 'note' && subC === 'add') {
         const text = args.slice(2).join(' ');
         if (text) {
-            notes.unshift(text);
-            localStorage.setItem('yannian_notes', JSON.stringify(notes));
-            renderNotes();
-            appendCliOutput(`<span class="cli-success">成功:</span> 备忘录已添加。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 缺少便签内容。用法: note add [内容]`);
-        }
+            notes.unshift(text); saveData('yannian_notes', JSON.stringify(notes)); renderNotes();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已添加。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 缺少内容。`); }
     }
     else if (c === 'note' && subC === 'edit') {
-        const idx = parseInt(args[2]);
-        const newText = args.slice(3).join(' ');
+        const idx = parseInt(args[2]); const newText = args.slice(3).join(' ');
         if (!isNaN(idx) && notes[idx] && newText) {
-            notes[idx] = newText;
-            localStorage.setItem('yannian_notes', JSON.stringify(notes));
-            renderNotes();
-            appendCliOutput(`<span class="cli-success">成功:</span> 备忘录 [${idx}] 已修改。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 用法: note edit [编号] [新内容]`);
-        }
+            notes[idx] = newText; saveData('yannian_notes', JSON.stringify(notes)); renderNotes();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已修改。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 参数无效。`); }
     }
     else if (c === 'note' && subC === 'rm') {
         const idx = parseInt(args[2]);
         if (!isNaN(idx) && notes[idx]) {
-            notes.splice(idx, 1);
-            localStorage.setItem('yannian_notes', JSON.stringify(notes));
-            renderNotes();
-            appendCliOutput(`<span class="cli-success">成功:</span> 备忘录 [${idx}] 已删除。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 找不到对应的备忘录。`);
-        }
+            notes.splice(idx, 1); saveData('yannian_notes', JSON.stringify(notes)); renderNotes();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已删除。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 找不到备忘录。`); }
     }
-
-    // --- 倒数日管理 ---
     else if (c === 'cd' && subC === 'ls') {
-        if (countdowns.length === 0) {
-            appendCliOutput("暂无倒数日。");
-        } else {
+        if (countdowns.length === 0) { appendCliOutput("暂无倒数日。"); }
+        else {
             let out = "<br>";
             countdowns.forEach((cd, i) => {
-                const diff = Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                const finalDays = diff > 0 ? diff : 0;
+                const finalDays = Math.max(0, Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
                 out += `[<span class="cli-success">${i}</span>] ${cd.title} : 还有 <span class="cli-warning">${finalDays}</span> 天 <span class="cli-dim">(${cd.date})</span><br>`;
             });
             appendCliOutput(out);
         }
     }
     else if (c === 'cd' && subC === 'add') {
-        const title = args[2];
-        const dateStr = args[3];
+        const title = args[2]; const dateStr = args[3];
         if (title && dateStr && !isNaN(new Date(dateStr).getTime())) {
-            countdowns.push({ title, date: dateStr });
-            localStorage.setItem('yannian_cds', JSON.stringify(countdowns));
-            renderCountdowns();
-            appendCliOutput(`<span class="cli-success">成功:</span> 倒数日已添加。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 用法: cd add [名称] [YYYY-MM-DD]`);
-        }
+            countdowns.push({ title, date: dateStr }); saveData('yannian_cds', JSON.stringify(countdowns)); renderCountdowns();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已添加。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 用法: cd add [名] [YYYY-MM-DD]`); }
     }
     else if (c === 'cd' && subC === 'rm') {
         const idx = parseInt(args[2]);
         if (!isNaN(idx) && countdowns[idx]) {
-            countdowns.splice(idx, 1);
-            localStorage.setItem('yannian_cds', JSON.stringify(countdowns));
-            renderCountdowns();
-            appendCliOutput(`<span class="cli-success">成功:</span> 倒数日 [${idx}] 已删除。`);
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 找不到对应的倒数日。`);
-        }
+            countdowns.splice(idx, 1); saveData('yannian_cds', JSON.stringify(countdowns)); renderCountdowns();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已删除。`);
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 找不到倒数日。`); }
     }
-
-    // --- 一言库管理 ---
     else if (c === 'quote' && subC === 'ls') {
-        if (yannianQuotes.length === 0) {
-            appendCliOutput("专属一言库为空。");
-        } else {
+        if (yannianQuotes.length === 0) { appendCliOutput("为空。"); }
+        else {
             let out = "<br>";
             yannianQuotes.forEach((q, i) => out += `[<span class="cli-success">${i}</span>] ${q}<br>`);
             appendCliOutput(out);
         }
     }
-
-    // --- 书签管理 (文件树架构) ---
-    else if (c === 'bm' && subC === 'ls') {
-        renderCliBookmarks();
-    }
+    else if (c === 'bm' && subC === 'ls') { renderCliBookmarks(); }
     else if (c === 'bm' && subC === 'add') {
-        const name = args[2];
-        const url = args[3];
+        const name = args[2]; const url = args[3];
         if (name && url) {
             let finalUrl = url.startsWith('http') ? url : 'https://' + url;
-            bookmarks.push({ name, url: finalUrl, cat: cliCurrentBmPath });
-            localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
-            renderBookmarksView();
-            appendCliOutput(`<span class="cli-success">成功:</span> 书签 '${name}' 已添加到当前目录。`);
-            renderCliBookmarks();
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 用法: bm add [名称] [网址]`);
-        }
+            bookmarks.push({ name, url: finalUrl, cat: cliCurrentBmPath }); saveData('yannian_bookmarks', JSON.stringify(bookmarks)); renderBookmarksView();
+            appendCliOutput(`<span class="cli-success">成功:</span> 书签已添加。`); renderCliBookmarks();
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 参数不全。`); }
     }
     else if (c === 'bm' && subC === 'rm') {
-        const viewIdx = parseInt(args[2]);
-        const item = cliCurrentViewItems[viewIdx];
+        const viewIdx = parseInt(args[2]); const item = cliCurrentViewItems[viewIdx];
         if (!isNaN(viewIdx) && item && item.type === 'bookmark') {
-            bookmarks.splice(item.originalIndex, 1);
-            localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
-            renderBookmarksView();
-            appendCliOutput(`<span class="cli-success">成功:</span> 书签已删除。`);
-            renderCliBookmarks();
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 只能删除当前目录下的书签项编号。`);
-        }
+            bookmarks.splice(item.originalIndex, 1); saveData('yannian_bookmarks', JSON.stringify(bookmarks)); renderBookmarksView();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已删除。`); renderCliBookmarks();
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 仅可删书签编号。`); }
     }
     else if (c === 'bm' && subC === 'edit') {
-        const viewIdx = parseInt(args[2]);
-        const name = args[3];
-        const url = args[4];
-        const item = cliCurrentViewItems[viewIdx];
+        const viewIdx = parseInt(args[2]); const name = args[3]; const url = args[4]; const item = cliCurrentViewItems[viewIdx];
         if (!isNaN(viewIdx) && item && item.type === 'bookmark' && name && url) {
             let finalUrl = url.startsWith('http') ? url : 'https://' + url;
             bookmarks[item.originalIndex] = { name, url: finalUrl, cat: bookmarks[item.originalIndex].cat };
-            localStorage.setItem('yannian_bookmarks', JSON.stringify(bookmarks));
-            renderBookmarksView();
-            appendCliOutput(`<span class="cli-success">成功:</span> 书签已更新。`);
-            renderCliBookmarks();
-        } else {
-            appendCliOutput(`<span class="cli-warning">错误:</span> 用法: bm edit [编号] [新名称] [新网址]`);
-        }
+            saveData('yannian_bookmarks', JSON.stringify(bookmarks)); renderBookmarksView();
+            appendCliOutput(`<span class="cli-success">成功:</span> 已更新。`); renderCliBookmarks();
+        } else { appendCliOutput(`<span class="cli-warning">错误:</span> 参数有误。`); }
     }
-
-    // --- 未知命令 ---
-    else {
-        appendCliOutput(`<span class="cli-warning">未找到命令:</span> ${c}. Type 'help' to see available commands.`);
-    }
+    else { appendCliOutput(`<span class="cli-warning">未找到命令:</span> ${c}`); }
 }
 
-// 终端书签视图渲染器
 function renderCliBookmarks() {
     const prefix = cliCurrentBmPath === '' ? '' : cliCurrentBmPath + '/';
     let subFolders = new Set();
@@ -1001,16 +1030,11 @@ function renderCliBookmarks() {
 
     bookmarks.forEach((bm, idx) => {
         const cat = bm.cat || '';
-        if (cat === cliCurrentBmPath) {
-            currentItems.push({ type: 'bookmark', name: bm.name, url: bm.url, originalIndex: idx });
-        } else if (cat.startsWith(prefix)) {
-            const remainingPath = prefix === '' ? cat : cat.substring(prefix.length);
-            const nextSlashIdx = remainingPath.indexOf('/');
-            if (nextSlashIdx === -1) {
-                subFolders.add(remainingPath);
-            } else {
-                subFolders.add(remainingPath.substring(0, nextSlashIdx));
-            }
+        if (cat === cliCurrentBmPath) { currentItems.push({ type: 'bookmark', name: bm.name, url: bm.url, originalIndex: idx }); }
+        else if (cat.startsWith(prefix)) {
+            const rem = prefix === '' ? cat : cat.substring(prefix.length);
+            const nSlash = rem.indexOf('/');
+            nSlash === -1 ? subFolders.add(rem) : subFolders.add(rem.substring(0, nSlash));
         }
     });
 
@@ -1018,9 +1042,7 @@ function renderCliBookmarks() {
     let out = `<br><span class="cli-info">当前路径: /${cliCurrentBmPath}</span><br>`;
     let viewIdx = 0;
 
-    if (cliCurrentBmPath !== '') {
-        out += `[<span class="cli-success">..</span>] 返回上一级<br>`;
-    }
+    if (cliCurrentBmPath !== '') out += `[<span class="cli-success">..</span>] 返回上一级<br>`;
 
     subFolders.forEach(folderName => {
         cliCurrentViewItems.push({ type: 'folder', name: folderName, path: prefix + folderName });
@@ -1032,39 +1054,20 @@ function renderCliBookmarks() {
         out += `[<span class="cli-success">${viewIdx++}</span>] <span class="cli-bm">[书签] ${bm.name}</span> <span class="cli-dim">- ${bm.url}</span><br>`;
     });
 
-    if (cliCurrentViewItems.length === 0) {
-        out += "此目录下空空如也。<br>";
-    }
-
+    if (cliCurrentViewItems.length === 0) out += "空空如也。<br>";
     appendCliOutput(out);
 }
 
-// 终端文件树动作执行器
 function handleCliBmAction(idx) {
     const item = cliCurrentViewItems[idx];
-    if (!item) {
-        appendCliOutput(`<span class="cli-warning">错误:</span> 找不到编号为 [${idx}] 的项。请先运行 'bm ls'。`);
-        return;
-    }
-    if (item.type === 'folder') {
-        cliCurrentBmPath = item.path;
-        renderCliBookmarks();
-    } else {
-        appendCliOutput(`<span class="cli-info">正在跳转至:</span> ${item.name}...`);
-        window.location.href = item.url;
-    }
+    if (!item) { appendCliOutput(`<span class="cli-warning">错误:</span> 找不到编号。`); return; }
+    if (item.type === 'folder') { cliCurrentBmPath = item.path; renderCliBookmarks(); }
+    else { appendCliOutput(`<span class="cli-info">跳转中...</span>`); window.location.href = item.url; }
 }
 
-// 终端路径返回
 function handleCliBmUp() {
-    if (cliCurrentBmPath === '') {
-        appendCliOutput(`<span class="cli-warning">已经是根目录了。</span>`);
-        return;
-    }
-    const parts = cliCurrentBmPath.split('/');
-    parts.pop();
+    if (cliCurrentBmPath === '') return;
+    const parts = cliCurrentBmPath.split('/'); parts.pop();
     cliCurrentBmPath = parts.join('/');
     renderCliBookmarks();
 }
-
-init();

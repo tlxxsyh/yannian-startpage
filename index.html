@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>言念起始页</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="icon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -20,25 +20,31 @@
         <div id="desktop-right-zone" class="desktop-zone hidden"></div>
 
         <div class="center-content">
-            <div class="clock" id="gui-clock">00:00</div>
+            <div class="clock" id="gui-clock" style="visibility: hidden;">00:00:00</div>
             <div class="search-wrapper">
                 <div class="search-box modern">
                     <div class="engine-toggle" id="engine-toggle" title="切换引擎">
                         <img id="engine-icon" src="https://cn.bing.com/favicon.ico" alt="Bing">
                     </div>
                     <input type="text" id="gui-search-input" placeholder="搜索" autocomplete="off">
+                    <div class="search-spacer"></div>
                 </div>
 
                 <div id="engine-list-dropdown" class="glass-dropdown hidden"></div>
 
                 <div id="search-history-dropdown" class="glass-dropdown hidden">
                     <div id="history-list"></div>
+                    <div id="clear-history-bar" class="history-footer">清空历史</div>
                 </div>
             </div>
         </div>
 
         <div id="hitokoto-container">
             <span id="hitokoto-text"></span>
+        </div>
+
+        <div id="dock-container">
+            <div id="dock-inner" class="dock-glass"></div>
         </div>
 
         <div id="central-hub" class="modal hidden">
@@ -167,6 +173,14 @@
                             <span>显示桌面倒数日</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-dt-cd">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 15px;">
+                            <span>显示时钟秒数</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-show-seconds">
                                 <span class="slider round"></span>
                             </label>
                         </div>

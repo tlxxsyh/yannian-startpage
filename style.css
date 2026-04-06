@@ -32,7 +32,7 @@ svg {
     background-color: #1a1a1a;
     background-size: cover;
     background-position: center;
-    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.6s ease;
     z-index: -2;
 }
 
@@ -134,12 +134,11 @@ svg {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     pointer-events: auto;
     flex-shrink: 0;
-    transition: transform 0.2s;
+    transition: border-color 0.2s, background 0.2s;
     color: #fff;
 }
 
 .dt-card:hover {
-    transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.2);
 }
@@ -284,7 +283,8 @@ svg {
 
 .search-box.modern:focus-within input {
     color: #333;
-    text-align: center;
+    text-align: left;
+    padding-left: 8px;
     font-weight: normal;
 }
 
@@ -297,7 +297,17 @@ svg {
     color: transparent;
 }
 
-/* 下拉框共通基础 (明亮毛玻璃) */
+.search-spacer {
+    width: 0;
+    transition: all 0.4s ease;
+    pointer-events: none;
+}
+
+.search-box.modern:focus-within .search-spacer {
+    width: 40px;
+}
+
+/* 下拉框共通基础 */
 .glass-dropdown {
     position: absolute;
     top: 60px;
@@ -318,7 +328,6 @@ svg {
     display: none;
 }
 
-/* 历史记录独立样式 */
 #search-history-dropdown {
     width: 440px;
 }
@@ -380,7 +389,21 @@ svg {
     transform: scale(1.1);
 }
 
-/* ==== 修改：引擎下拉独立样式，设置 max-height 并且允许滚动 ==== */
+/* 搜索历史底部栏 - 极简弱化版设计 */
+.history-footer {
+    padding: 5px 15px 8px;
+    text-align: right;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.history-footer:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 引擎下拉独立样式 */
 #engine-list-dropdown {
     left: 0;
     width: 160px;
@@ -389,7 +412,6 @@ svg {
     overflow-y: auto;
 }
 
-/* 隐藏丑陋的原生滚动条，保持毛玻璃边缘的纯净通透，依然支持滚轮滑动 */
 #engine-list-dropdown::-webkit-scrollbar {
     display: none;
 }
@@ -418,10 +440,9 @@ svg {
     padding: 1px;
 }
 
-
 #hitokoto-container {
     position: absolute;
-    bottom: 80px;
+    bottom: 120px;
     width: 100%;
     text-align: center;
     opacity: 0;
@@ -441,6 +462,55 @@ svg {
     color: rgba(255, 255, 255, 0.85);
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     letter-spacing: 1px;
+}
+
+/* ================= Mac 风格 Dock 栏 ================= */
+#dock-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    padding: 5px;
+    transition: opacity 0.3s ease;
+}
+
+.dock-glass {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dock-item {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dock-item:hover {
+    transform: scale(1.2) translateY(-8px);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.dock-item img {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    pointer-events: none;
 }
 
 /* ================= 中央控制台 ================= */
@@ -794,7 +864,7 @@ button.outline:hover {
 /* 文件夹与列表独立视图区 */
 .folder-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
     gap: 15px;
     align-content: start;
     flex-shrink: 0;
@@ -807,7 +877,7 @@ button.outline:hover {
 }
 
 .folder-item {
-    padding: 20px 10px;
+    padding: 15px 10px;
     text-align: center;
     cursor: pointer;
 }
@@ -817,13 +887,13 @@ button.outline:hover {
 }
 
 .folder-icon {
-    font-size: 2.2rem;
-    margin-bottom: 10px;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
     color: rgba(255, 255, 255, 0.8);
 }
 
 .folder-name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
