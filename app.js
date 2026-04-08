@@ -24,10 +24,23 @@ const iconCopyStr = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" heigh
 const iconCheckStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 const iconCloseStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
-const iconFolder = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#FFD700" stroke="#444" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M2.5 4.5h5.5l2 3h11.5v12H2.5z"></path>
-  <path d="M2.5 9h19" stroke-width="1" opacity="0.4"></path>
+// === 【已彻底改回：像素级黄色 Win95 文件夹图标】 ===
+const iconFolder = `<svg width="18" height="18" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <g shape-rendering="crispEdges">
+    <rect x="1" y="2" width="6" height="1" fill="#000"/>
+    <rect x="0" y="3" width="1" height="11" fill="#000"/>
+    <rect x="7" y="3" width="1" height="1" fill="#000"/>
+    <rect x="8" y="4" width="7" height="1" fill="#000"/>
+    <rect x="15" y="5" width="1" height="9" fill="#000"/>
+    <rect x="1" y="14" width="14" height="1" fill="#000"/>
+    <rect x="1" y="3" width="6" height="1" fill="#d1a84f"/>
+    <rect x="1" y="4" width="7" height="1" fill="#d1a84f"/>
+    <rect x="1" y="5" width="14" height="9" fill="#fedc7a"/>
+    <rect x="1" y="5" width="13" height="1" fill="#fffcf0"/>
+    <rect x="1" y="6" width="1" height="8" fill="#fffcf0"/>
+  </g>
 </svg>`;
+
 const iconHome = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 
 function getFaviconUrl(url, size = 64) {
@@ -113,7 +126,7 @@ async function bootApp() {
     yannianQuotes = safeParse(localStorage.getItem('yannian_quotes'), [
         "总之岁月漫长，然而值得等待。— 村上春树 《如果我们的语言是威士忌》",
         "时来天地皆同力，运去英雄不自由。",
-        "最明亮时总是最迷茫，最繁华时也是最悲凉。— 林语堂 《京华烟云》",
+        "最明亮时总是最迷茫，最繁华时也是最悲凉. — 林语堂 《京华烟云》",
         "于群峰之上，更觉长风浩荡。",
         "谁信故人千里，此时却到眉尖。",
         "当你做什么事都拖得太久，做得太晚，你就不能期待还有人待在原处等你。",

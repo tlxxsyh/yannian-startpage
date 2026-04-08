@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "言念起始页",
+  "name": "言念-新标签页",
   "version": "2.0.0",
   "description": "追求极致纯净与效率的双模浏览器主页，内置Win95风格书签收藏管理。鼠标右键呼出管理器，按Ctrl+/切换模式。",
   "chrome_url_overrides": {
