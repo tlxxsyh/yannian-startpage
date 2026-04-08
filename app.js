@@ -524,7 +524,6 @@ function renderBookmarksView() {
             });
         });
 
-        // 此处的重复变量声明已被删除！
         itemsView.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => openBmModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
         itemsView.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', (e) => delBookmark(parseInt(e.currentTarget.getAttribute('data-idx')))));
     } else {
@@ -670,16 +669,22 @@ function renderNotes() {
     hubList.querySelectorAll('.save-inline-btn').forEach(btn => btn.addEventListener('click', (e) => { const idx = parseInt(e.currentTarget.getAttribute('data-idx')); const txt = document.getElementById(`inline-note-${idx}`).value.trim(); if (txt) notes[idx] = txt; else notes.splice(idx, 1); saveData('yannian_notes', JSON.stringify(notes)); inlineEditingNoteIndex = -1; renderNotes(); }));
 }
 
-document.getElementById('btn-add-note').addEventListener('click', () => { const text = document.getElementById('hub-note-input').value.trim(); if (text) { notes.unshift(text); saveData('yannian_notes', JSON.stringify(notes)); renderNotes(); document.getElementById('hub-note-input').value = ''; } });
+document.getElementById('btn-add-note').addEventListener('click', () => {
+    const text = document.getElementById('hub-note-input').value.trim();
+    if (text) { notes.unshift(text); saveData('yannian_notes', JSON.stringify(notes)); renderNotes(); document.getElementById('hub-note-input').value = ''; }
+});
 
 function openCdModal(idx) {
     editingCdIndex = idx;
     if (idx >= 0) {
-        const cd = countdowns[idx]; document.getElementById('cd-modal-title').textContent = '编辑倒数日';
-        document.getElementById('cd-title').value = cd.title; document.getElementById('cd-date').value = cd.date;
+        const cd = countdowns[idx];
+        document.getElementById('cd-modal-title').textContent = '编辑倒数日';
+        document.getElementById('cd-title').value = cd.title;
+        document.getElementById('cd-date').value = cd.date;
     } else {
         document.getElementById('cd-modal-title').textContent = '新增倒数日';
-        document.getElementById('cd-title').value = ''; document.getElementById('cd-date').value = '';
+        document.getElementById('cd-title').value = '';
+        document.getElementById('cd-date').value = '';
     }
     document.getElementById('cd-modal').classList.remove('hidden');
 }
@@ -688,10 +693,14 @@ document.getElementById('btn-add-cd').addEventListener('click', () => openCdModa
 document.getElementById('btn-close-cd-modal').addEventListener('click', () => document.getElementById('cd-modal').classList.add('hidden'));
 
 document.getElementById('btn-save-cd').addEventListener('click', () => {
-    const title = document.getElementById('cd-title').value.trim(); const dateStr = document.getElementById('cd-date').value;
+    const title = document.getElementById('cd-title').value.trim();
+    const dateStr = document.getElementById('cd-date').value;
     if (title && dateStr && !isNaN(new Date(dateStr).getTime())) {
-        if (editingCdIndex >= 0) { countdowns[editingCdIndex] = { title, date: dateStr }; } else { countdowns.push({ title, date: dateStr }); }
-        saveData('yannian_cds', JSON.stringify(countdowns)); document.getElementById('cd-modal').classList.add('hidden'); renderCountdowns();
+        if (editingCdIndex >= 0) { countdowns[editingCdIndex] = { title, date: dateStr }; }
+        else { countdowns.push({ title, date: dateStr }); }
+        saveData('yannian_cds', JSON.stringify(countdowns));
+        document.getElementById('cd-modal').classList.add('hidden');
+        renderCountdowns();
     } else { alert("信息不完整或日期格式有误"); }
 });
 
@@ -699,11 +708,21 @@ function renderCountdowns() {
     const hubList = document.getElementById('hub-cd-list'); const dtList = document.getElementById('desktop-right-zone');
     let hubHtml = ''; let dtHtml = '';
     countdowns.forEach((cd, idx) => {
-        const diff = Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); const finalDays = diff > 0 ? diff : 0;
+        const diff = Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const finalDays = diff > 0 ? diff : 0;
         hubHtml += `<div class="item-card"><div class="item-info" style="flex:1;"><span style="font-weight: bold; color: #333; width: 100px;">${cd.title}</span><span class="highlight-num" style="font-size:1.5rem; margin-right:10px;">${finalDays}</span>天<span style="color:rgba(0,0,0,0.4); font-size:0.8rem; margin-left:10px;">(${cd.date})</span></div><div class="item-actions"><button class="action-btn edit-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="action-btn del del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
-        dtHtml += `<div class="dt-card"><div class="dt-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${cd.title}</span></div><div class="dt-content"><span>${finalDays}</span> <span>天</span></div><div class="desk-cd-actions"><button class="edit-desk-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="del desk-del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
+        dtHtml += `
+            <div class="dt-card">
+                <div class="dt-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${cd.title}</span></div>
+                <div class="dt-content"><span>${finalDays}</span> <span>天</span></div>
+                <div class="desk-cd-actions">
+                    <button class="edit-desk-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button>
+                    <button class="del desk-del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button>
+                </div>
+            </div>`;
     });
     hubList.innerHTML = hubHtml; dtList.innerHTML = dtHtml;
+
     hubList.querySelectorAll('.edit-cd-btn').forEach(btn => btn.addEventListener('click', (e) => openCdModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
     hubList.querySelectorAll('.del-cd-btn').forEach(btn => btn.addEventListener('click', (e) => { countdowns.splice(parseInt(e.currentTarget.getAttribute('data-idx')), 1); saveData('yannian_cds', JSON.stringify(countdowns)); renderCountdowns(); }));
     dtList.querySelectorAll('.edit-desk-cd-btn').forEach(btn => btn.addEventListener('click', (e) => openCdModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
@@ -727,19 +746,204 @@ document.getElementById('bg-file-input').addEventListener('change', function () 
     const file = this.files[0]; if (file) { if (file.size > 1.5 * 1024 * 1024) return alert('图片须小于 1.5MB'); const reader = new FileReader(); reader.onload = e => applyBackground(e.target.result); reader.readAsDataURL(file); } this.value = '';
 });
 
-const cliInput = document.getElementById('cli-input'); const cliOutput = document.getElementById('cli-output'); const terminalContainer = document.querySelector('.terminal-container');
-cliInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        const cmd = cliInput.value.trim(); if (!cmd) return;
-        const div = document.createElement('div'); div.innerHTML = `<span class="cli-prompt">yannian@home:~$</span> ${cmd}`; cliOutput.appendChild(div);
-        if (cmd === 'gui') { isCliMode = false; toggleModeView(); }
-        else if (cmd === 'clear') { cliOutput.innerHTML = ''; }
-        else { const d = document.createElement('div'); d.innerHTML = `<span class="cli-warning">未知命令。</span>`; cliOutput.appendChild(d); }
-        cliInput.value = ''; terminalContainer.scrollTop = terminalContainer.scrollHeight;
+// ================= 全新升级的 CLI 命令行核心引擎 =================
+const cliInput = document.getElementById('cli-input');
+const cliOutput = document.getElementById('cli-output');
+const terminalContainer = document.querySelector('.terminal-container');
+
+function getPromptStr() {
+    const pathStr = cliCurrentBmPath === '' ? '~' : '~/' + cliCurrentBmPath;
+    return `yannian@${pathStr}:$`;
+}
+
+function updateCliPrompt() {
+    const promptEl = document.querySelector('.cli-input-line .prompt');
+    if (promptEl) promptEl.textContent = getPromptStr() + ' ';
+}
+
+// 初始化时更新一下 prompt
+updateCliPrompt();
+
+/* 核心优化：全局点击捕获焦点，符合真实终端操作直觉 */
+document.getElementById('cli-mode').addEventListener('click', () => {
+    if (isCliMode) {
+        cliInput.focus();
     }
 });
 
-if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+cliInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const cmdStr = cliInput.value.trim();
+        if (!cmdStr) return;
+
+        const currentPrompt = getPromptStr();
+        const div = document.createElement('div');
+        div.innerHTML = `<span class="cli-prompt">${currentPrompt}</span> ${cmdStr}`;
+        cliOutput.appendChild(div);
+
+        const args = cmdStr.split(' ').filter(p => p);
+        const mainCmd = args[0].toLowerCase();
+
+        function executeLs() {
+            const prefix = cliCurrentBmPath === '' ? '' : cliCurrentBmPath + '/';
+            let folders = new Set(); let items = [];
+            bookmarks.forEach((bm) => {
+                const cat = bm.cat || '';
+                if (cat === cliCurrentBmPath) { items.push(bm); }
+                else if (cat.startsWith(prefix)) {
+                    const rem = prefix === '' ? cat : cat.substring(prefix.length);
+                    const nextSlash = rem.indexOf('/');
+                    folders.add(nextSlash === -1 ? rem : rem.substring(0, nextSlash));
+                }
+            });
+
+            cliCurrentViewItems = [];
+            let html = `<div class="cli-info">Directory: /${cliCurrentBmPath || '根目录'}</div>`;
+            if (folders.size === 0 && items.length === 0) {
+                html += `<div class="cli-dim">当前目录为空</div>`;
+            } else {
+                let idx = 0;
+                folders.forEach(f => {
+                    cliCurrentViewItems.push({ type: 'folder', name: f });
+                    html += `<div style="margin-left: 10px;"><span class="cli-bm">[${idx}]</span> <span style="color:#FFD700; font-weight:bold;">📁 ${f}/</span></div>`;
+                    idx++;
+                });
+                items.forEach(bm => {
+                    cliCurrentViewItems.push({ type: 'link', bm: bm });
+                    html += `<div style="margin-left: 10px;"><span class="cli-bm">[${idx}]</span> 🌐 ${bm.name} <span class="cli-dim">(${bm.url})</span></div>`;
+                    idx++;
+                });
+                html += `<div class="cli-dim" style="margin-top:5px;">[提示] 输入 'cd <序号/名称>' 进入文件夹，'open <序号>' 访问网页。'cd ..' 返回。</div>`;
+            }
+            const d = document.createElement('div'); d.innerHTML = html; cliOutput.appendChild(d);
+        }
+
+        if (mainCmd === 'gui') {
+            isCliMode = false; toggleModeView();
+        }
+        else if (mainCmd === 'clear') {
+            cliOutput.innerHTML = '';
+        }
+        else if (mainCmd === 'help') {
+            const d = document.createElement('div');
+            d.innerHTML = `
+                <div class="cli-info">可用命令列表 (Available Commands):</div>
+                <div class="cli-dim">  help    - 显示此帮助信息</div>
+                <div class="cli-dim">  gui     - 退出终端，返回可视化桌面界面</div>
+                <div class="cli-dim">  clear   - 清除终端屏幕输出</div>
+                <div class="cli-dim">  time    - 显示当前系统日期和时间</div>
+                <div class="cli-dim">  ls / ll - 列出当前目录下的书签和文件夹</div>
+                <div class="cli-dim">  cd      - 切换目录 (例如: cd 工具, cd ..)</div>
+                <div class="cli-dim">  open    - 根据序号打开书签网页 (例如: open 1)</div>
+                <div class="cli-dim">  note    - 查看所有备忘便签</div>
+                <div class="cli-dim">  days    - 查看所有倒数日</div>
+                <div class="cli-dim">  quote   - 随机查看一条专属一言</div>
+                <div class="cli-dim">  about   - 显示系统版本与开发者信息</div>
+            `;
+            cliOutput.appendChild(d);
+        }
+        else if (mainCmd === 'time' || mainCmd === 'date') {
+            const d = document.createElement('div');
+            d.innerHTML = `<div class="cli-success">${new Date().toLocaleString('zh-CN')}</div>`;
+            cliOutput.appendChild(d);
+        }
+        else if (mainCmd === 'ls' || mainCmd === 'll' || (mainCmd === 'bm' && args[1] === 'ls')) {
+            executeLs();
+        }
+        else if (mainCmd === 'cd' || (mainCmd === 'bm' && args[1] === 'cd')) {
+            const target = mainCmd === 'cd' ? args.slice(1).join(' ') : args.slice(2).join(' ');
+            if (!target || target === '/' || target === '~') {
+                cliCurrentBmPath = '';
+                executeLs();
+            } else if (target === '..') {
+                if (cliCurrentBmPath !== '') {
+                    const parts = cliCurrentBmPath.split('/'); parts.pop(); cliCurrentBmPath = parts.join('/');
+                }
+                executeLs();
+            } else {
+                let folderName = target; const num = parseInt(target);
+                if (!isNaN(num) && cliCurrentViewItems[num] && cliCurrentViewItems[num].type === 'folder') { folderName = cliCurrentViewItems[num].name; }
+                const newPath = cliCurrentBmPath === '' ? folderName : cliCurrentBmPath + '/' + folderName;
+                const exists = bookmarks.some(b => (b.cat || '').startsWith(newPath + '/') || (b.cat || '') === newPath);
+
+                if (exists) {
+                    cliCurrentBmPath = newPath;
+                    executeLs();
+                } else {
+                    const d = document.createElement('div'); d.innerHTML = `<div class="cli-warning">cd: no such file or directory: ${target}</div>`; cliOutput.appendChild(d);
+                }
+            }
+            updateCliPrompt();
+        }
+        else if (mainCmd === 'open' || mainCmd === 'go' || (mainCmd === 'bm' && args[1] === 'open')) {
+            const target = mainCmd === 'bm' ? args.slice(2).join(' ') : args.slice(1).join(' ');
+            const num = parseInt(target);
+            if (!isNaN(num) && cliCurrentViewItems[num] && cliCurrentViewItems[num].type === 'link') {
+                const url = cliCurrentViewItems[num].bm.url;
+                const d = document.createElement('div'); d.innerHTML = `<div class="cli-success">Opening: ${url} ...</div>`; cliOutput.appendChild(d);
+                window.location.href = url;
+            } else {
+                const d = document.createElement('div'); d.innerHTML = `<div class="cli-warning">无效的序号或找不到书签。请先运行 'ls'。</div>`; cliOutput.appendChild(d);
+            }
+        }
+        else if (mainCmd === 'note' || mainCmd === 'notes') {
+            const d = document.createElement('div');
+            if (notes.length === 0) {
+                d.innerHTML = `<div class="cli-dim">暂无便签数据。</div>`;
+            } else {
+                let html = `<div class="cli-info">便签列表:</div>`;
+                notes.forEach((n, i) => {
+                    html += `<div style="margin-left: 10px;"><span class="cli-warning">[${i}]</span> ${n}</div>`;
+                });
+                d.innerHTML = html;
+            }
+            cliOutput.appendChild(d);
+        }
+        else if (mainCmd === 'days' || mainCmd === 'cdays') {
+            const d = document.createElement('div');
+            if (countdowns.length === 0) {
+                d.innerHTML = `<div class="cli-dim">暂无倒数日数据。</div>`;
+            } else {
+                let html = `<div class="cli-info">倒数日列表:</div>`;
+                countdowns.forEach((c, i) => {
+                    const diff = Math.ceil((new Date(c.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    const finalDays = diff > 0 ? diff : 0;
+                    html += `<div style="margin-left: 10px;"><span class="cli-success">[${i}]</span> ${c.title} : 还有 <span style="color:var(--theme-color); font-weight:bold;">${finalDays}</span> 天 <span class="cli-dim">(${c.date})</span></div>`;
+                });
+                d.innerHTML = html;
+            }
+            cliOutput.appendChild(d);
+        }
+        else if (mainCmd === 'quote' || mainCmd === 'quotes') {
+            const d = document.createElement('div');
+            if (yannianQuotes.length === 0) {
+                d.innerHTML = `<div class="cli-dim">暂无一言数据。</div>`;
+            } else {
+                const q = yannianQuotes[Math.floor(Math.random() * yannianQuotes.length)];
+                d.innerHTML = `<div class="cli-success">"${q}"</div>`;
+            }
+            cliOutput.appendChild(d);
+        }
+        else if (mainCmd === 'about') {
+            const d = document.createElement('div');
+            d.innerHTML = `
+                <div class="cli-success">Yannian OS [Version v2.0.0]</div>
+                <div class="cli-dim">A purely geeky start page. Created by 言念Syhang.</div>
+            `;
+            cliOutput.appendChild(d);
+        }
+        else {
+            const d = document.createElement('div');
+            d.innerHTML = `<span class="cli-warning">未知命令: '${mainCmd}'。 请输入 'help' 查看可用命令。</span>`;
+            cliOutput.appendChild(d);
+        }
+
+        cliInput.value = '';
+        terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    }
+});
+
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.yannian_bookmarks) {
             bookmarks = safeParse(changes.yannian_bookmarks.newValue, []);
