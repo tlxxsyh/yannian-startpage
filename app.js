@@ -23,7 +23,6 @@ const iconEditStr = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a
 const iconFolder = `<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
 const iconHome = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 
-// ================= 智能图标防爬虫拦截解析器 =================
 function getFaviconUrl(url, size = 64) {
     try {
         let validUrl = url.startsWith('http') ? url : 'https://' + url;
@@ -40,7 +39,6 @@ function getFaviconUrl(url, size = 64) {
     }
 }
 
-// ================= 终极数据防掉失引擎 (Chrome Extension Sandbox API) =================
 function safeParse(str, defaultVal) {
     if (!str) return defaultVal;
     try { return JSON.parse(str); } catch (e) { return defaultVal; }
@@ -222,7 +220,7 @@ function renderDock() {
 
     document.getElementById('dock-container').style.display = 'block';
     rootBookmarks.forEach(bm => {
-        const iconSrc = getFaviconUrl(bm.url, 64);
+        const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url, 64);
         const div = document.createElement('div');
         div.className = 'dock-item';
         div.title = bm.name;
@@ -350,14 +348,43 @@ searchInput.addEventListener('blur', () => {
     setTimeout(() => { historyDropdown.classList.add('hidden'); }, 150);
 });
 
+// ================= 一言带行号及统计的核心逻辑 =================
 function initQuotesPanel() {
-    const textarea = document.getElementById('quotes-textarea');
-    textarea.value = yannianQuotes.join('\n');
+    const qTa = document.getElementById('quotes-textarea');
+    const qLn = document.getElementById('quotes-line-numbers');
+    const qCount = document.getElementById('quotes-count');
 
-    document.getElementById('btn-save-quotes').addEventListener('click', () => {
-        const rawText = textarea.value;
+    function updateQuotesLines() {
+        const lines = qTa.value.split('\n');
+        qLn.innerHTML = Array.from({ length: lines.length }, (_, i) => i + 1).join('<br>');
+
+        // 计算真实的有效非空语句数量
+        const validCount = lines.map(q => q.trim()).filter(q => q).length;
+        qCount.textContent = `共 ${validCount} 句`;
+    }
+
+    qTa.value = yannianQuotes.join('\n');
+    updateQuotesLines();
+
+    qTa.addEventListener('input', updateQuotesLines);
+
+    // 监听滚动，保持行号和文本完美对齐同步
+    qTa.addEventListener('scroll', () => {
+        qLn.scrollTop = qTa.scrollTop;
+    });
+
+    // 避免重复绑定
+    const btnSave = document.getElementById('btn-save-quotes');
+    const newBtnSave = btnSave.cloneNode(true);
+    btnSave.parentNode.replaceChild(newBtnSave, btnSave);
+
+    newBtnSave.addEventListener('click', () => {
+        const rawText = qTa.value;
         yannianQuotes = rawText.split('\n').map(q => q.trim()).filter(q => q);
         saveData('yannian_quotes', JSON.stringify(yannianQuotes));
+
+        qTa.value = yannianQuotes.join('\n'); // 自动将排版清理干净后重新填入
+        updateQuotesLines();
         alert('专属一言保存成功！');
     });
 }
@@ -427,6 +454,7 @@ const bmModal = document.getElementById('bm-modal');
 const inputName = document.getElementById('bm-name');
 const inputUrl = document.getElementById('bm-url');
 const inputCat = document.getElementById('bm-cat');
+const inputIcon = document.getElementById('bm-icon');
 
 function renderBreadcrumbs() {
     breadcrumbsContainer.innerHTML = '';
@@ -459,6 +487,7 @@ function renderBreadcrumbs() {
     }
 }
 
+// ================= 重构：子文件夹条目化并永远置顶 =================
 function renderBookmarksView() {
     renderBreadcrumbs();
     foldersView.innerHTML = '';
@@ -483,15 +512,22 @@ function renderBookmarksView() {
         }
     });
 
-    if (subFolders.size > 0 || currentFolderPath === '') {
+    if (subFolders.size > 0) {
         foldersView.classList.remove('hidden');
         subFolders.forEach(folderName => {
             const targetPath = currentFolderPath === '' ? folderName : currentFolderPath + '/' + folderName;
             const div = document.createElement('div');
-            div.className = 'folder-item';
+
+            // 采用类似书签的横向列表布局
+            div.className = 'item-card folder-row';
             div.innerHTML = `
-                <div class="folder-icon">${iconFolder}</div>
-                <div class="folder-name">${folderName}</div>
+                <div class="item-info">
+                    <div class="folder-icon-sm">${iconFolder}</div>
+                    <span style="font-weight: bold; cursor: pointer;">${folderName}</span>
+                </div>
+                <div class="item-actions">
+                    <span style="font-size: 0.8rem; color: rgba(255,255,255,0.4); padding-right: 5px;">进入目录 ➔</span>
+                </div>
             `;
             div.addEventListener('click', () => {
                 currentFolderPath = targetPath;
@@ -507,7 +543,7 @@ function renderBookmarksView() {
         itemsView.classList.remove('hidden');
         let htmlContent = '';
         currentItems.forEach((bm) => {
-            const iconSrc = getFaviconUrl(bm.url, 32);
+            const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url, 32);
             htmlContent += `
                 <div class="item-card">
                     <div class="item-info">
@@ -558,11 +594,13 @@ function openBmModal(idx) {
         inputName.value = bm.name;
         inputUrl.value = bm.url;
         inputCat.value = bm.cat || '';
+        inputIcon.value = bm.icon || '';
     } else {
         document.getElementById('bm-modal-title').textContent = '新增书签';
         inputName.value = '';
         inputUrl.value = '';
         inputCat.value = currentFolderPath;
+        inputIcon.value = '';
     }
     bmModal.classList.remove('hidden');
 }
@@ -571,14 +609,20 @@ document.getElementById('btn-save-bm').addEventListener('click', () => {
     const name = inputName.value.trim();
     let url = inputUrl.value.trim();
     const cat = inputCat.value.trim();
+    const icon = inputIcon.value.trim();
 
     if (name && url) {
         if (!url.startsWith('http')) url = 'https://' + url;
+
+        const bmData = { name, url, cat };
+        if (icon) bmData.icon = icon;
+
         if (editingBmIndex >= 0) {
-            bookmarks[editingBmIndex] = { name, url, cat };
+            bookmarks[editingBmIndex] = bmData;
         } else {
-            bookmarks.push({ name, url, cat });
+            bookmarks.push(bmData);
         }
+
         saveData('yannian_bookmarks', JSON.stringify(bookmarks));
         bmModal.classList.add('hidden');
         renderBookmarksView();
@@ -1070,4 +1114,16 @@ function handleCliBmUp() {
     const parts = cliCurrentBmPath.split('/'); parts.pop();
     cliCurrentBmPath = parts.join('/');
     renderCliBookmarks();
+}
+
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.yannian_bookmarks) {
+            bookmarks = safeParse(changes.yannian_bookmarks.newValue, []);
+            try { localStorage.setItem('yannian_bookmarks', changes.yannian_bookmarks.newValue); } catch (e) { }
+            if (typeof renderBookmarksView === 'function') {
+                renderBookmarksView();
+            }
+        }
+    });
 }

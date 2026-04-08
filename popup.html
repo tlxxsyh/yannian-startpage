@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 320px;
+            padding: 20px;
+            margin: 0;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #E59850;
+            font-size: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: -8px;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            outline: none;
+            font-size: 13px;
+        }
+
+        input:focus {
+            border-color: #E59850;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 13px;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-save {
+            background: #E59850;
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>言念收藏器</h3>
+    <div class="form-group">
+        <label>网页名称</label>
+        <input type="text" id="bm-name" placeholder="获取中...">
+
+        <label>网页地址</label>
+        <input type="text" id="bm-url" placeholder="获取中...">
+
+        <label>保存路径 (留空则默认存入 Dock 栏)</label>
+        <input type="text" id="bm-cat" placeholder="例如: 效率/工具">
+
+        <label>自定义图标 URL (留空则自动抓取)</label>
+        <input type="text" id="bm-icon" placeholder="输入图片网络地址...">
+
+        <div class="btn-group">
+            <button class="btn-cancel" id="btn-cancel">取消</button>
+            <button class="btn-save" id="btn-save">确认保存</button>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

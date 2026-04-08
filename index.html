@@ -16,7 +16,6 @@
     <div id="gui-mode" class="mode-container active">
 
         <div id="desktop-left-zone" class="desktop-zone hidden"></div>
-
         <div id="desktop-right-zone" class="desktop-zone hidden"></div>
 
         <div class="center-content">
@@ -120,7 +119,7 @@
                             </div>
                         </div>
 
-                        <div id="bm-folders-view" class="folder-grid"></div>
+                        <div id="bm-folders-view" class="scroll-list" style="margin-bottom: 5px;"></div>
                         <div id="bm-view-divider" class="divider hidden"><span>当前目录书签</span></div>
                         <div id="bm-items-view" class="scroll-list"></div>
                     </div>
@@ -148,11 +147,20 @@
                             <div class="spacer"></div>
                             <button id="btn-save-quotes" class="sm-btn primary">保存一言</button>
                         </div>
-                        <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 15px;">
-                            请在此建立你的专属一言（每行一句）。每次聚焦搜索框时，将从中随机呈现。
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                                请在此建立专属一言（每行一句），聚焦搜索时随机呈现。
+                            </div>
+                            <div id="quotes-count"
+                                style="font-size: 0.85rem; color: var(--theme-color); background: rgba(229,152,80,0.1); padding: 4px 10px; border-radius: 12px; white-space: nowrap; border: 1px solid rgba(229,152,80,0.2);">
+                                共 0 句</div>
                         </div>
-                        <textarea id="quotes-textarea" class="inline-edit-textarea" style="flex: 1; resize: none;"
-                            placeholder="在此输入你的专属一言..."></textarea>
+                        <div class="editor-container">
+                            <div id="quotes-line-numbers" class="line-numbers">1</div>
+                            <textarea id="quotes-textarea" wrap="off" spellcheck="false"
+                                placeholder="在此输入你的专属一言..."></textarea>
+                        </div>
                     </div>
 
                     <div id="tab-search" class="tab-pane">
@@ -279,7 +287,8 @@
                 <div class="form-group">
                     <input type="text" id="bm-name" placeholder="名称 (如: GitHub)">
                     <input type="text" id="bm-url" placeholder="网址 (如: github.com)">
-                    <input type="text" id="bm-cat" placeholder="分类 (如: 开发/前端/Vue)">
+                    <input type="text" id="bm-cat" placeholder="分类/路径 (如: 开发/前端)">
+                    <input type="text" id="bm-icon" placeholder="自定义图标 URL (留空则自动抓取)">
                     <div style="display: flex; gap: 15px; margin-top: 15px;">
                         <button id="btn-close-bm-modal" class="outline" style="flex: 1; padding: 10px;">取消</button>
                         <button id="btn-save-bm" class="primary" style="flex: 1; padding: 10px;">保存</button>

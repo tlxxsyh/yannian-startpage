@@ -13,6 +13,11 @@
     "128": "icon.png"
   },
   "permissions": [
-    "storage"
-  ]
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "收藏当前网页"
+  }
 }

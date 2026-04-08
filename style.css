@@ -2,8 +2,11 @@
     --theme-color: #E59850;
 }
 
-body,
 html {
+    background-color: #1a1a1a;
+}
+
+body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -11,6 +14,65 @@ html {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
     color: #fff;
     background-color: transparent;
+    animation: pageSoftFadeIn 0.8s ease forwards;
+}
+
+@keyframes pageSoftFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes floatDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-25px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatUp {
+    0% {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes floatUpDock {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 25px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 svg {
@@ -22,7 +84,6 @@ svg {
     vertical-align: middle;
 }
 
-/* 动态壁纸层 */
 #app-bg {
     position: absolute;
     top: 0;
@@ -41,7 +102,6 @@ svg {
     filter: blur(12px) brightness(0.6);
 }
 
-/* 暗色景深 Overlay */
 #vignette-overlay {
     position: absolute;
     top: 0;
@@ -93,7 +153,6 @@ svg {
     z-index: 5;
 }
 
-/* ================= 桌面左右阵列挂件区 ================= */
 .desktop-zone {
     position: fixed;
     top: 40px;
@@ -123,7 +182,6 @@ svg {
     right: 40px;
 }
 
-/* 纯净透明玻璃底板 */
 .dt-card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(16px);
@@ -136,11 +194,52 @@ svg {
     flex-shrink: 0;
     transition: border-color 0.2s, background 0.2s;
     color: #fff;
+    animation: floatUp 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 .dt-card:hover {
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.2);
+}
+
+#desktop-left-zone .dt-card:nth-child(1) {
+    animation-delay: 0.15s;
+}
+
+#desktop-left-zone .dt-card:nth-child(2) {
+    animation-delay: 0.25s;
+}
+
+#desktop-left-zone .dt-card:nth-child(3) {
+    animation-delay: 0.35s;
+}
+
+#desktop-left-zone .dt-card:nth-child(4) {
+    animation-delay: 0.45s;
+}
+
+#desktop-left-zone .dt-card:nth-child(5) {
+    animation-delay: 0.55s;
+}
+
+#desktop-right-zone .dt-card:nth-child(1) {
+    animation-delay: 0.20s;
+}
+
+#desktop-right-zone .dt-card:nth-child(2) {
+    animation-delay: 0.30s;
+}
+
+#desktop-right-zone .dt-card:nth-child(3) {
+    animation-delay: 0.40s;
+}
+
+#desktop-right-zone .dt-card:nth-child(4) {
+    animation-delay: 0.50s;
+}
+
+#desktop-right-zone .dt-card:nth-child(5) {
+    animation-delay: 0.60s;
 }
 
 .dt-title {
@@ -179,7 +278,6 @@ svg {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* ================= 核心居中区与搜索栏 ================= */
 .center-content {
     position: fixed;
     top: 22vh;
@@ -200,6 +298,7 @@ svg {
     margin-bottom: 25px;
     user-select: none;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 4px 15px rgba(0, 0, 0, 0.5);
+    animation: floatDown 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
 }
 
 .search-wrapper {
@@ -207,6 +306,7 @@ svg {
     display: flex;
     flex-direction: column;
     align-items: center;
+    animation: scaleFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
 }
 
 .search-box.modern {
@@ -244,6 +344,7 @@ svg {
     align-items: center;
     justify-content: center;
     width: 0;
+    height: 32px;
     opacity: 0;
     margin-right: 0;
     border-radius: 50%;
@@ -251,21 +352,23 @@ svg {
     transition: all 0.4s ease;
     background: #fff;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .search-box.modern:focus-within .engine-toggle {
-    width: 28px;
+    width: 32px;
     opacity: 1;
-    margin-right: 12px;
+    margin-right: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .engine-toggle:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .engine-toggle img {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
 }
 
@@ -283,9 +386,9 @@ svg {
 
 .search-box.modern:focus-within input {
     color: #333;
-    text-align: left;
-    padding-left: 8px;
+    text-align: center;
     font-weight: normal;
+    padding-left: 0;
 }
 
 .search-box input::placeholder {
@@ -307,7 +410,6 @@ svg {
     width: 40px;
 }
 
-/* 下拉框共通基础 */
 .glass-dropdown {
     position: absolute;
     top: 60px;
@@ -389,7 +491,6 @@ svg {
     transform: scale(1.1);
 }
 
-/* 搜索历史底部栏 - 极简弱化版设计 */
 .history-footer {
     padding: 5px 15px 8px;
     text-align: right;
@@ -403,7 +504,6 @@ svg {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* 引擎下拉独立样式 */
 #engine-list-dropdown {
     left: 0;
     width: 160px;
@@ -464,52 +564,55 @@ svg {
     letter-spacing: 1px;
 }
 
-/* ================= Mac 风格 Dock 栏 ================= */
+/* ================= 极致瘦身的 Mac Dock 栏 ================= */
 #dock-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
     padding: 5px;
     transition: opacity 0.3s ease;
+    animation: floatUpDock 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
 }
 
 .dock-glass {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 15px;
+    padding: 8px 12px;
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
+    border-radius: 18px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .dock-item {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s, box-shadow 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .dock-item:hover {
-    transform: scale(1.2) translateY(-8px);
-    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.15) translateY(-6px);
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .dock-item img {
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
     pointer-events: none;
 }
 
@@ -646,18 +749,6 @@ svg {
 .tab-pane.active {
     display: flex;
     animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
 }
 
 ::-webkit-scrollbar {
@@ -844,9 +935,8 @@ button.outline:hover {
     color: #fff;
 }
 
-/* 卡片模块 */
+/* 基础卡片模块 */
 .item-card,
-.folder-item,
 .widget-card {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -855,49 +945,34 @@ button.outline:hover {
 }
 
 .item-card:hover,
-.folder-item:hover,
 .widget-card:hover {
     background: rgba(0, 0, 0, 0.5);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* 文件夹与列表独立视图区 */
-.folder-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-    gap: 15px;
-    align-content: start;
-    flex-shrink: 0;
-    margin-bottom: 10px;
-}
-
-.folder-grid.hidden,
-.scroll-list.hidden {
-    display: none;
-}
-
-.folder-item {
-    padding: 15px 10px;
-    text-align: center;
+/* ================= 文件夹阵列转置顶条目样式 ================= */
+.folder-row {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
     cursor: pointer;
 }
 
-.folder-item:hover {
-    transform: translateY(-3px);
+.folder-row:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--theme-color);
+    transform: translateX(4px);
 }
 
-.folder-icon {
-    font-size: 1.6rem;
-    margin-bottom: 8px;
-    color: rgba(255, 255, 255, 0.8);
+.folder-icon-sm {
+    color: var(--theme-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.folder-name {
-    font-size: 0.9rem;
-    color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.folder-icon-sm svg {
+    width: 20px;
+    height: 20px;
 }
 
 .scroll-list {
@@ -905,6 +980,10 @@ button.outline:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.scroll-list.hidden {
+    display: none;
 }
 
 /* 顶部对齐 */
@@ -946,8 +1025,10 @@ button.outline:hover {
 
 .item-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-shrink: 0;
+    height: 100%;
 }
 
 .action-btn {
@@ -996,6 +1077,53 @@ button.outline:hover {
 
 .inline-edit-textarea:focus {
     background: rgba(0, 0, 0, 0.5);
+}
+
+/* ================= 极客级：一言编辑器代码高亮容器 ================= */
+.editor-container {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--theme-color);
+    border-radius: 8px;
+    overflow: hidden;
+    flex: 1;
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.editor-container:focus-within {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.line-numbers {
+    padding: 12px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.4);
+    text-align: right;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    user-select: none;
+    overflow-y: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 20px;
+}
+
+#quotes-textarea {
+    border: none;
+    background: transparent;
+    flex: 1;
+    box-shadow: none;
+    border-radius: 0;
+    resize: none;
+    outline: none;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #fff;
 }
 
 /* Toggle Switch 组件 */
