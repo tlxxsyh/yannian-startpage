@@ -10,17 +10,25 @@
 
 <body>
     <div id="app-bg"></div>
-
     <div id="vignette-overlay"></div>
 
-    <div id="gui-mode" class="mode-container active">
+    <div id="settings-gear" title="打开设置控制台">
+        <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+        </svg>
+    </div>
 
+    <div id="gui-mode" class="mode-container active">
         <div id="desktop-left-zone" class="desktop-zone hidden"></div>
         <div id="desktop-right-zone" class="desktop-zone hidden"></div>
 
-        <div class="center-content">
+        <div class="center-content" id="main-center-view">
             <div class="clock" id="gui-clock" style="visibility: hidden;">00:00:00</div>
-            <div class="search-wrapper">
+
+            <div class="search-wrapper" id="search-wrapper">
                 <div class="search-box modern">
                     <div class="engine-toggle" id="engine-toggle" title="切换引擎">
                         <img id="engine-icon" src="https://cn.bing.com/favicon.ico" alt="Bing">
@@ -28,12 +36,54 @@
                     <input type="text" id="gui-search-input" placeholder="搜索" autocomplete="off">
                     <div class="search-spacer"></div>
                 </div>
-
                 <div id="engine-list-dropdown" class="glass-dropdown hidden"></div>
-
                 <div id="search-history-dropdown" class="glass-dropdown hidden">
                     <div id="history-list"></div>
                     <div id="clear-history-bar" class="history-footer">清空历史</div>
+                </div>
+            </div>
+
+            <div class="win95-window hidden" id="bookmark-wrapper">
+                <div class="win95-titlebar">
+                    <div class="win95-title">
+                        <img src="icon.png" style="width:16px;height:16px;margin-right:5px;image-rendering:pixelated;">
+                        <span>书签资源管理器 - 言念 OS</span>
+                    </div>
+                    <button class="win95-close-btn" id="btn-close-bm-view">X</button>
+                </div>
+
+                <div class="win95-toolbar">
+                    <button class="win95-btn" id="btn-add-bm-modal">新建书签(N)</button>
+                    <button class="win95-btn" id="btn-import-bm">导入书签(I)...</button>
+                    <input type="file" id="bm-import-input" accept=".html" style="display: none;">
+                    <button class="win95-btn" id="btn-export-bm">导出书签(E)...</button>
+                </div>
+
+                <div class="win95-address-bar">
+                    <span>地址(A):</span>
+                    <button class="win95-icon-btn" id="btn-bm-back" title="返回上一级">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="win95-icon-btn" id="btn-bm-home" title="返回根目录">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </button>
+                    <div id="bm-breadcrumbs" class="win95-sunken-panel win95-breadcrumbs"></div>
+                </div>
+
+                <div class="win95-search-bar">
+                    <span>搜索(S):</span>
+                    <input type="text" id="bm-search-input" class="win95-input" placeholder="输入书签关键字或标签..."
+                        autocomplete="off">
+                </div>
+
+                <div class="win95-sunken-panel win95-content-bg">
+                    <div id="bm-folders-view" class="win95-list"></div>
+                    <div id="bm-items-view" class="win95-list" style="margin-top: 5px;"></div>
                 </div>
             </div>
         </div>
@@ -49,19 +99,11 @@
         <div id="central-hub" class="modal hidden">
             <div class="hub-container glass-panel">
                 <div class="hub-sidebar">
-                    <button class="nav-btn active" data-target="tab-bookmarks">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                        </svg> 书签导航
-                    </button>
-                    <button class="nav-btn" data-target="tab-notes">
+                    <button class="nav-btn active" data-target="tab-notes">
                         <svg viewBox="0 0 24 24">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg> 备忘速记
+                        </svg> 便签
                     </button>
                     <button class="nav-btn" data-target="tab-quotes">
                         <svg viewBox="0 0 24 24">
@@ -72,7 +114,7 @@
                         <svg viewBox="0 0 24 24">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg> 搜索管理
+                        </svg> 搜索引擎
                     </button>
                     <button class="nav-btn" data-target="tab-widgets">
                         <svg viewBox="0 0 24 24">
@@ -82,19 +124,19 @@
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg> 倒数日
                     </button>
-                    <button class="nav-btn" data-target="tab-theme">
+                    <button class="nav-btn" data-target="tab-settings">
                         <svg viewBox="0 0 24 24">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
                             <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg> 主题壁纸
+                        </svg> 设置
                     </button>
                     <button class="nav-btn" data-target="tab-about">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="16" x2="12" y2="12"></line>
                             <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                        </svg> 关于插件
+                        </svg> 关于
                     </button>
                     <div class="spacer"></div>
                     <button id="close-hub" class="nav-btn close-btn">
@@ -106,36 +148,11 @@
                 </div>
 
                 <div class="hub-content">
-
-                    <div id="tab-bookmarks" class="tab-pane active">
-                        <div class="bookmark-header-area">
-                            <div id="bm-breadcrumbs" class="breadcrumbs"></div>
-
-                            <div class="header-actions">
-                                <button id="btn-add-bm-modal" class="sm-btn primary">新增</button>
-                                <button id="btn-import-bm" class="sm-btn outline">导入</button>
-                                <input type="file" id="bm-import-input" accept=".json" style="display: none;">
-                                <button id="btn-export-bm" class="sm-btn outline">导出</button>
-                            </div>
-                        </div>
-
-                        <div id="bm-folders-view" class="scroll-list" style="margin-bottom: 5px;"></div>
-                        <div id="bm-view-divider" class="divider hidden"><span>当前目录书签</span></div>
-                        <div id="bm-items-view" class="scroll-list"></div>
-                    </div>
-
-                    <div id="tab-notes" class="tab-pane">
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 15px;">
-                            <span>显示桌面便签</span>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-dt-note">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="form-group glass-panel-inner" style="margin-bottom: 15px; flex-shrink: 0;">
+                    <div id="tab-notes" class="tab-pane active">
+                        <div class="form-group" style="margin-bottom: 15px; flex-shrink: 0;">
                             <textarea id="hub-note-input" rows="3" placeholder="灵光一闪，写点什么..."></textarea>
                             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 5px;">
-                                <button id="btn-add-note" class="primary" style="padding: 8px 20px;">新增便签</button>
+                                <button id="btn-add-note" class="primary sm-btn">新增便签</button>
                             </div>
                         </div>
                         <div id="note-list" class="scroll-list"></div>
@@ -149,12 +166,8 @@
                         </div>
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <div style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
-                                请在此建立专属一言（每行一句），聚焦搜索时随机呈现。
-                            </div>
-                            <div id="quotes-count"
-                                style="font-size: 0.85rem; color: var(--theme-color); background: rgba(229,152,80,0.1); padding: 4px 10px; border-radius: 12px; white-space: nowrap; border: 1px solid rgba(229,152,80,0.2);">
-                                共 0 句</div>
+                            <div style="color: #888; font-size: 0.9rem;">请在此建立专属一言（每行一句），聚焦搜索时随机呈现。</div>
+                            <div id="quotes-count" class="badge-count">共 0 句</div>
                         </div>
                         <div class="editor-container">
                             <div id="quotes-line-numbers" class="line-numbers">1</div>
@@ -165,35 +178,20 @@
 
                     <div id="tab-search" class="tab-pane">
                         <h3>自定义搜索引擎</h3>
-                        <div class="form-group glass-panel-inner" style="flex-shrink: 0;">
+                        <div class="form-group" style="flex-shrink: 0;">
                             <input type="text" id="engine-name" placeholder="名称 (如: B站)">
-                            <input type="text" id="engine-url"
-                                placeholder="查询地址前缀 (如: https://search.bilibili.com/all?keyword=)">
-                            <input type="text" id="engine-icon-url" placeholder="图标URL (可选，留空则自动抓取)">
-                            <button id="btn-add-engine" class="primary" style="padding: 10px;">添加引擎</button>
+                            <input type="text" id="engine-url" placeholder="查询地址前缀">
+                            <input type="text" id="engine-icon-url" placeholder="图标URL (可选)">
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button id="btn-add-engine" class="primary sm-btn">添加引擎</button>
+                            </div>
                         </div>
-                        <h4 style="margin: 15px 0 5px 0; color: rgba(255,255,255,0.7); font-size: 0.95rem;">我的引擎列表</h4>
+                        <h4 style="margin: 15px 0 5px 0; color: #666; font-size: 0.95rem;">我的引擎列表</h4>
                         <div id="engine-list" class="scroll-list"></div>
                     </div>
 
                     <div id="tab-widgets" class="tab-pane">
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 15px;">
-                            <span>显示桌面倒数日</span>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-dt-cd">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 15px;">
-                            <span>显示时钟秒数</span>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-show-seconds">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div class="pane-header" style="margin-top: 15px;">
+                        <div class="pane-header" style="margin-top: 5px;">
                             <h3 style="margin: 0; border: none; padding: 0;">倒数日管理</h3>
                             <div class="spacer"></div>
                             <button id="btn-add-cd" class="sm-btn primary">新增倒数日</button>
@@ -201,35 +199,41 @@
                         <div id="hub-cd-list" class="scroll-list" style="margin-bottom: 20px;"></div>
                     </div>
 
-                    <div id="tab-theme" class="tab-pane">
-                        <h3>主题色设置</h3>
-                        <div class="form-group glass-panel-inner"
-                            style="flex-direction: row; align-items: center; gap: 15px;">
-                            <input type="color" id="theme-color-input" value="#E59850"
-                                style="padding: 0; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; background: transparent;">
-                            <span style="color: rgba(255,255,255,0.8);">选择主页高亮主题颜色</span>
+                    <div id="tab-settings" class="tab-pane">
+                        <h3>主页功能显示</h3>
+                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 10px;">
+                            <span>显示桌面便签</span>
+                            <label class="switch"><input type="checkbox" id="toggle-dt-note"><span
+                                    class="slider round"></span></label>
+                        </div>
+                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 10px;">
+                            <span>显示桌面倒数日</span>
+                            <label class="switch"><input type="checkbox" id="toggle-dt-cd"><span
+                                    class="slider round"></span></label>
+                        </div>
+                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 25px;">
+                            <span>显示时钟秒数</span>
+                            <label class="switch"><input type="checkbox" id="toggle-show-seconds"><span
+                                    class="slider round"></span></label>
+                        </div>
+
+                        <h3>主题色与壁纸</h3>
+                        <div class="form-group theme-color-row"
+                            style="flex-direction: row; align-items: center; gap: 15px; margin-bottom: 15px;">
+                            <input type="color" id="theme-color-input" value="#E59850" title="选择主页高亮颜色">
+                            <span style="color: #555;">选择主页高亮主题颜色</span>
                             <button id="btn-reset-theme" class="sm-btn outline" style="margin-left: auto;">恢复默认</button>
                         </div>
 
-                        <h3 style="margin-top: 20px;">更换壁纸</h3>
                         <div class="bg-upload-group">
-                            <button id="btn-upload-local" class="upload-btn">
-                                <svg viewBox="0 0 24 24" width="20" height="20"
-                                    style="vertical-align: middle; margin-right: 5px;">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg> 从本地上传图片
-                            </button>
+                            <button id="btn-upload-local" class="upload-btn">从本地上传壁纸图片</button>
                             <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
                         </div>
                         <div class="divider"><span>或使用网络链接</span></div>
-                        <div class="form-group glass-panel-inner">
-                            <input type="text" id="bg-url-input" placeholder="输入图片 URL 链接...">
-                            <div style="display: flex; gap: 15px; margin-top: 10px;">
-                                <button id="btn-clear-bg" class="outline" style="flex: 1; padding: 10px;">清除壁纸</button>
-                                <button id="btn-save-bg" class="primary" style="flex: 1; padding: 10px;">应用链接</button>
-                            </div>
+                        <div class="form-group" style="flex-direction: row; gap: 10px;">
+                            <input type="text" id="bg-url-input" placeholder="输入图片 URL 链接..." style="flex:1;">
+                            <button id="btn-save-bg" class="primary sm-btn" style="flex-shrink:0;">应用链接</button>
+                            <button id="btn-clear-bg" class="outline sm-btn" style="flex-shrink:0;">清除</button>
                         </div>
                     </div>
 
@@ -237,61 +241,85 @@
                         <div style="text-align: center; margin-top: 20px;">
                             <h2 class="highlight-text" style="font-weight: 300; letter-spacing: 3px; font-size: 2rem;">
                                 言念起始页</h2>
-                            <p style="color: rgba(255,255,255,0.7); line-height: 1.8; font-size: 0.95rem;">
+                            <p style="color: #666; line-height: 1.8; font-size: 0.95rem;">
                                 追求极致纯净与效率的极客浏览器主页。<br>
                                 可视化 (GUI) 与 命令行 (CLI) 双轨架构设计。
                             </p>
-
                             <div
-                                style="margin: 30px auto; width: 85%; padding: 25px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: left;">
+                                style="margin: 30px auto; width: 85%; padding: 25px; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; text-align: left;">
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" style="color:#888;">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="12" cy="7" r="4"></circle>
                                     </svg>
-                                    <span style="color: rgba(255,255,255,0.6);">开发者：</span> <span>言念Syhang</span>
+                                    <span style="color: #888;">开发者：</span> <span style="color:#333;">言念Syhang</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" style="color:#888;">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                     </svg>
-                                    <span style="color: rgba(255,255,255,0.6);">开源协议：</span> <span>MIT License</span>
+                                    <span style="color: #888;">开源协议：</span> <span style="color:#333;">MIT License</span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" style="color:#888;">
                                         <path
                                             d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
                                         </path>
                                     </svg>
-                                    <span style="color: rgba(255,255,255,0.6);">代码库：</span>
-                                    <a href="https://github.com/tlxxsyh" target="_blank" class="highlight-text"
-                                        style="text-decoration: none; font-weight: bold;">访问作者 GitHub 主页</a>
+                                    <span style="color: #888;">代码库：</span>
+                                    <a href="https://github.com/tlxxsyh/yannian-startpage" target="_blank"
+                                        class="highlight-text" style="text-decoration: none; font-weight: bold;">访问作者
+                                        GitHub 主页</a>
                                 </div>
                             </div>
-
-                            <div
-                                style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-top: 40px; font-family: monospace;">
-                                Version v1.0.0
-                            </div>
+                            <div style="color: #bbb; font-size: 0.8rem; margin-top: 40px; font-family: monospace;">
+                                Version v2.0.0</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
+        <div id="cd-modal" class="modal hidden" style="z-index: 200;">
+            <div class="cd-modal-panel">
+                <h3 id="cd-modal-title">新增倒数日</h3>
+                <div class="cd-form-group">
+                    <input type="text" id="cd-title" placeholder="ddl/纪念日/生日">
+                    <input type="date" id="cd-date">
+                    <div class="cd-modal-btns">
+                        <button id="btn-close-cd-modal" class="btn-cancel">取消</button>
+                        <button id="btn-save-cd" class="btn-save">保存</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="bm-modal" class="modal hidden" style="z-index: 200;">
-            <div class="glass-panel" style="width: 350px; padding: 25px;">
-                <h3 id="bm-modal-title" class="highlight-text" style="margin-top: 0;">编辑书签</h3>
-                <div class="form-group">
-                    <input type="text" id="bm-name" placeholder="名称 (如: GitHub)">
-                    <input type="text" id="bm-url" placeholder="网址 (如: github.com)">
-                    <input type="text" id="bm-cat" placeholder="分类/路径 (如: 开发/前端)">
-                    <input type="text" id="bm-icon" placeholder="自定义图标 URL (留空则自动抓取)">
-                    <div style="display: flex; gap: 15px; margin-top: 15px;">
-                        <button id="btn-close-bm-modal" class="outline" style="flex: 1; padding: 10px;">取消</button>
-                        <button id="btn-save-bm" class="primary" style="flex: 1; padding: 10px;">保存</button>
+            <div class="win95-window" style="width: 350px; height: auto; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);">
+                <div class="win95-titlebar">
+                    <div class="win95-title"><span id="bm-modal-title">编辑书签</span></div>
+                    <button class="win95-close-btn" id="btn-close-bm-modal-x">X</button>
+                </div>
+                <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #c0c0c0;">
+                    <div style="display:flex; align-items:center;"><span
+                            style="width:50px;font-size:12px;color:#000;">名称:</span><input type="text"
+                            class="win95-input" id="bm-name"></div>
+                    <div style="display:flex; align-items:center;"><span
+                            style="width:50px;font-size:12px;color:#000;">网址:</span><input type="text"
+                            class="win95-input" id="bm-url"></div>
+                    <div style="display:flex; align-items:center;"><span
+                            style="width:50px;font-size:12px;color:#000;">路径:</span><input type="text"
+                            class="win95-input" id="bm-cat"></div>
+                    <div style="display:flex; align-items:center;"><span
+                            style="width:50px;font-size:12px;color:#000;">标签:</span><input type="text"
+                            class="win95-input" id="bm-tags" placeholder="逗号分隔"></div>
+                    <div style="display:flex; align-items:center;"><span
+                            style="width:50px;font-size:12px;color:#000;">图标:</span><input type="text"
+                            class="win95-input" id="bm-icon"></div>
+                    <div style="display: flex; gap: 15px; margin-top: 10px; justify-content: flex-end;">
+                        <button id="btn-save-bm" class="win95-btn" style="width:70px;">确定(O)</button>
+                        <button id="btn-close-bm-modal" class="win95-btn" style="width:70px;">取消(C)</button>
                     </div>
                 </div>
             </div>
@@ -301,7 +329,7 @@
     <div id="cli-mode" class="mode-container">
         <div class="terminal-container">
             <div id="cli-output">
-                <div><span class="cli-info">Welcome to Yannian Terminal [Version v1.0.0]</span></div>
+                <div><span class="cli-info">Welcome to Yannian Terminal [Version v2.0.0]</span></div>
                 <div class="cli-dim">Type 'help' to see available commands.</div>
                 <br>
             </div>
