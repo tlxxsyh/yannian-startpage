@@ -153,6 +153,7 @@ svg {
     z-index: 5;
 }
 
+/* 右下角齿轮按钮 */
 #settings-gear {
     position: fixed;
     bottom: 25px;
@@ -932,7 +933,6 @@ svg {
     gap: 1px;
 }
 
-/* 核心优化2：取消 flex:1，允许文字按需缩减但不会推远 Tag */
 .win95-item {
     display: flex;
     align-items: center;
@@ -1148,6 +1148,12 @@ svg {
     height: 100%;
     overflow-y: auto;
     padding-right: 8px;
+    padding-bottom: 10px;
+}
+
+.tab-pane>* {
+    flex-shrink: 0;
+    /* 核心防挤压规则：保证子元素不被压缩从而触发滚动条 */
 }
 
 .tab-pane.active {
@@ -1189,38 +1195,177 @@ svg {
     color: var(--theme-color);
 }
 
-.form-group {
+/* ================= 核心重新挂载：设置面板的分组布局 ================= */
+.settings-section-title {
+    font-size: 0.75rem !important;
+    font-weight: 600;
+    color: #888 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 8px 8px !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.settings-section-title:first-child {
+    margin-top: 0 !important;
+}
+
+.settings-group {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.settings-row {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.settings-row:last-child {
+    border-bottom: none;
+}
+
+.settings-row>span:first-child {
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.upload-btn-modern {
+    background: #fafafa;
+    border: 1px dashed #dcdcdc;
+    border-radius: 8px;
+    color: #666;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.85rem;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.upload-btn-modern svg {
+    width: 16px;
+    height: 16px;
+}
+
+.upload-btn-modern:hover {
+    border-color: var(--theme-color);
+    color: var(--theme-color);
+    background: rgba(229, 152, 80, 0.05);
+}
+
+.url-bg-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.url-bg-group input {
+    flex: 1;
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    border: 1px solid #eaeaea !important;
+    border-radius: 6px !important;
+    background: #fafafa !important;
+}
+
+.url-bg-group input:focus {
+    border-color: var(--theme-color) !important;
+    background: #fff !important;
+}
+
+.danger-title {
+    color: #ff4d4f !important;
+}
+
+.danger-group {
+    border-color: rgba(255, 77, 79, 0.15);
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.05);
+}
+
+.danger-row {
+    background: rgba(255, 77, 79, 0.02);
+}
+
+.danger-info {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 3px;
 }
 
-#central-hub .form-group input[type="text"],
-#central-hub .form-group textarea,
-#central-hub .form-group input[type="date"] {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+.danger-main {
+    color: #ff4d4f;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.danger-sub {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.danger-btn {
+    background: #ff4d4f;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 6px rgba(255, 77, 79, 0.2);
+    flex-shrink: 0;
+}
+
+.danger-btn:hover {
+    background: #ff7875;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 77, 79, 0.3);
+}
+
+/* ================= 核心修复：完美的圆形取色器 ================= */
+input[type="color"]#theme-color-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
     background: transparent;
-    color: #333;
-    outline: none;
-    font-family: inherit;
-    transition: all 0.2s;
-    font-size: 0.95rem;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
-#central-hub .form-group input[type="text"]:focus,
-#central-hub .form-group textarea:focus,
-#central-hub .form-group input[type="date"]:focus {
-    border-color: var(--theme-color);
-    box-shadow: 0 0 0 2px rgba(229, 152, 80, 0.1);
-    background: #fff;
+input[type="color"]#theme-color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
 }
 
-#central-hub .form-group input::placeholder,
-#central-hub .form-group textarea::placeholder {
-    color: #bbb;
+input[type="color"]#theme-color-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
+
+input[type="color"]#theme-color-input::-moz-color-swatch {
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
 
 button.primary {
     background: var(--theme-color);
@@ -1257,8 +1402,42 @@ button.primary:hover {
 }
 
 .sm-btn {
-    padding: 6px 14px;
+    padding: 6px 12px;
     font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+#central-hub .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#central-hub .form-group input[type="text"],
+#central-hub .form-group textarea,
+#central-hub .form-group input[type="date"] {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: transparent;
+    color: #333;
+    outline: none;
+    font-family: inherit;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+#central-hub .form-group input[type="text"]:focus,
+#central-hub .form-group textarea:focus,
+#central-hub .form-group input[type="date"]:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 2px rgba(229, 152, 80, 0.1);
+    background: #fff;
+}
+
+#central-hub .form-group input::placeholder,
+#central-hub .form-group textarea::placeholder {
+    color: #bbb;
 }
 
 #central-hub .item-card,
@@ -1282,6 +1461,7 @@ button.primary:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0;
 }
 
 .scroll-list.hidden {
@@ -1379,16 +1559,17 @@ button.primary:hover {
 #central-hub .editor-container {
     display: flex;
     background: #fff;
-    border: none;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
     flex: 1;
     transition: box-shadow 0.3s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 #central-hub .editor-container:focus-within {
     box-shadow: 0 0 0 2px rgba(229, 152, 80, 0.2);
+    border-color: var(--theme-color);
 }
 
 #central-hub .line-numbers {
@@ -1430,16 +1611,6 @@ button.primary:hover {
     padding: 4px 10px;
     border-radius: 12px;
     font-size: 0.85rem;
-}
-
-.toggle-card {
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 1rem;
-    flex-shrink: 0;
-    margin-bottom: 12px;
 }
 
 .switch {
@@ -1494,79 +1665,12 @@ button.primary:hover {
     border-radius: 50%;
 }
 
-.widget-card {
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 1.05rem;
-    flex-shrink: 0;
-}
-
 .highlight-num {
     font-size: 1.8rem;
     font-weight: 300;
     margin: 0 10px;
     font-family: monospace;
     color: var(--theme-color);
-}
-
-#central-hub .divider {
-    text-align: center;
-    color: #aaa;
-    font-size: 0.85rem;
-    margin: 15px 0;
-    position: relative;
-}
-
-.divider.hidden {
-    display: none;
-}
-
-#central-hub .upload-btn {
-    width: 100%;
-    padding: 12px;
-    background: transparent;
-    border: 1px dashed #d0d0d0;
-    border-radius: 8px;
-    color: #888;
-    cursor: pointer;
-    transition: 0.3s;
-    font-size: 0.95rem;
-}
-
-#central-hub .upload-btn:hover {
-    border-color: var(--theme-color);
-    color: var(--theme-color);
-    background: rgba(229, 152, 80, 0.05);
-}
-
-input[type="color"]#theme-color-input {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-}
-
-input[type="color"]#theme-color-input::-webkit-color-swatch-wrapper {
-    padding: 0;
-}
-
-input[type="color"]#theme-color-input::-webkit-color-swatch {
-    border: none;
-    border-radius: 50%;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-input[type="color"]#theme-color-input::-moz-color-swatch {
-    border: none;
-    border-radius: 50%;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .inline-edit-wrapper {
@@ -1607,7 +1711,6 @@ input[type="color"]#theme-color-input::-moz-color-swatch {
     height: 14px;
 }
 
-/* 核心优化3：倒数日弹窗的现代毛玻璃样式 */
 .cd-modal-panel {
     width: 340px;
     padding: 30px;

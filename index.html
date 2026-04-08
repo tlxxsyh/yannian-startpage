@@ -165,11 +165,11 @@
                             <button id="btn-save-quotes" class="sm-btn primary">保存一言</button>
                         </div>
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;">
                             <div style="color: #888; font-size: 0.9rem;">请在此建立专属一言（每行一句），聚焦搜索时随机呈现。</div>
                             <div id="quotes-count" class="badge-count">共 0 句</div>
                         </div>
-                        <div class="editor-container">
+                        <div class="editor-container" style="flex: 1;">
                             <div id="quotes-line-numbers" class="line-numbers">1</div>
                             <textarea id="quotes-textarea" wrap="off" spellcheck="false"
                                 placeholder="在此输入你的专属一言..."></textarea>
@@ -186,12 +186,12 @@
                                 <button id="btn-add-engine" class="primary sm-btn">添加引擎</button>
                             </div>
                         </div>
-                        <h4 style="margin: 15px 0 5px 0; color: #666; font-size: 0.95rem;">我的引擎列表</h4>
+                        <h4 style="margin: 15px 0 5px 0; color: #666; font-size: 0.95rem; flex-shrink: 0;">我的引擎列表</h4>
                         <div id="engine-list" class="scroll-list"></div>
                     </div>
 
                     <div id="tab-widgets" class="tab-pane">
-                        <div class="pane-header" style="margin-top: 5px;">
+                        <div class="pane-header" style="margin-top: 5px; flex-shrink: 0;">
                             <h3 style="margin: 0; border: none; padding: 0;">倒数日管理</h3>
                             <div class="spacer"></div>
                             <button id="btn-add-cd" class="sm-btn primary">新增倒数日</button>
@@ -200,40 +200,66 @@
                     </div>
 
                     <div id="tab-settings" class="tab-pane">
-                        <h3>主页功能显示</h3>
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 10px;">
-                            <span>显示桌面便签</span>
-                            <label class="switch"><input type="checkbox" id="toggle-dt-note"><span
-                                    class="slider round"></span></label>
-                        </div>
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 10px;">
-                            <span>显示桌面倒数日</span>
-                            <label class="switch"><input type="checkbox" id="toggle-dt-cd"><span
-                                    class="slider round"></span></label>
-                        </div>
-                        <div class="widget-card toggle-card" style="flex-shrink: 0; margin-bottom: 25px;">
-                            <span>显示时钟秒数</span>
-                            <label class="switch"><input type="checkbox" id="toggle-show-seconds"><span
-                                    class="slider round"></span></label>
-                        </div>
+                        <div style="padding-bottom: 30px;">
+                            <h3 class="settings-section-title">主页功能显示</h3>
+                            <div class="settings-group">
+                                <div class="settings-row">
+                                    <span>显示桌面便签</span>
+                                    <label class="switch"><input type="checkbox" id="toggle-dt-note"><span
+                                            class="slider round"></span></label>
+                                </div>
+                                <div class="settings-row">
+                                    <span>显示桌面倒数日</span>
+                                    <label class="switch"><input type="checkbox" id="toggle-dt-cd"><span
+                                            class="slider round"></span></label>
+                                </div>
+                                <div class="settings-row">
+                                    <span>显示时钟秒数</span>
+                                    <label class="switch"><input type="checkbox" id="toggle-show-seconds"><span
+                                            class="slider round"></span></label>
+                                </div>
+                            </div>
 
-                        <h3>主题色与壁纸</h3>
-                        <div class="form-group theme-color-row"
-                            style="flex-direction: row; align-items: center; gap: 15px; margin-bottom: 15px;">
-                            <input type="color" id="theme-color-input" value="#E59850" title="选择主页高亮颜色">
-                            <span style="color: #555;">选择主页高亮主题颜色</span>
-                            <button id="btn-reset-theme" class="sm-btn outline" style="margin-left: auto;">恢复默认</button>
-                        </div>
+                            <h3 class="settings-section-title">主题色与壁纸</h3>
+                            <div class="settings-group">
+                                <div class="settings-row">
+                                    <span>强调高亮色</span>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="color" id="theme-color-input" value="#E59850" title="选择主页高亮颜色">
+                                        <button id="btn-reset-theme" class="sm-btn outline">默认色</button>
+                                    </div>
+                                </div>
 
-                        <div class="bg-upload-group">
-                            <button id="btn-upload-local" class="upload-btn">从本地上传壁纸图片</button>
-                            <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
-                        </div>
-                        <div class="divider"><span>或使用网络链接</span></div>
-                        <div class="form-group" style="flex-direction: row; gap: 10px;">
-                            <input type="text" id="bg-url-input" placeholder="输入图片 URL 链接..." style="flex:1;">
-                            <button id="btn-save-bg" class="primary sm-btn" style="flex-shrink:0;">应用链接</button>
-                            <button id="btn-clear-bg" class="outline sm-btn" style="flex-shrink:0;">清除</button>
+                                <div class="settings-row"
+                                    style="flex-direction: column; align-items: stretch; gap: 12px; padding: 16px;">
+                                    <button id="btn-upload-local" class="upload-btn-modern">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        上传本地图片作为壁纸
+                                    </button>
+                                    <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
+
+                                    <div class="url-bg-group">
+                                        <input type="text" id="bg-url-input" placeholder="或粘贴网络壁纸链接 URL...">
+                                        <button id="btn-save-bg" class="primary sm-btn">应用</button>
+                                        <button id="btn-clear-bg" class="outline sm-btn">清除</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 class="settings-section-title danger-title">危险操作</h3>
+                            <div class="settings-group danger-group">
+                                <div class="settings-row danger-row">
+                                    <div class="danger-info">
+                                        <span class="danger-main">恢复出厂设置</span>
+                                        <span class="danger-sub">清空全部书签、倒数日及个性化配置</span>
+                                    </div>
+                                    <button id="btn-reset-data" class="danger-btn">立即重置</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

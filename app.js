@@ -24,23 +24,10 @@ const iconCopyStr = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" heigh
 const iconCheckStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 const iconCloseStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
-/* 核心重绘：Win95原汁原味像素点阵黄文件夹 (使用纯正色块拼装) */
-const iconFolder = `<svg width="18" height="18" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <g shape-rendering="crispEdges">
-    <rect x="1" y="2" width="6" height="1" fill="#000"/>
-    <rect x="0" y="3" width="1" height="11" fill="#000"/>
-    <rect x="7" y="3" width="1" height="1" fill="#000"/>
-    <rect x="8" y="4" width="7" height="1" fill="#000"/>
-    <rect x="15" y="5" width="1" height="9" fill="#000"/>
-    <rect x="1" y="14" width="14" height="1" fill="#000"/>
-    <rect x="1" y="3" width="6" height="1" fill="#d1a84f"/>
-    <rect x="1" y="4" width="7" height="1" fill="#d1a84f"/>
-    <rect x="1" y="5" width="14" height="9" fill="#fedc7a"/>
-    <rect x="1" y="5" width="13" height="1" fill="#fffcf0"/>
-    <rect x="1" y="6" width="1" height="8" fill="#fffcf0"/>
-  </g>
+const iconFolder = `<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#FFD700" stroke="#444" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M2.5 4.5h5.5l2 3h11.5v12H2.5z"></path>
+  <path d="M2.5 9h19" stroke-width="1" opacity="0.4"></path>
 </svg>`;
-
 const iconHome = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 
 function getFaviconUrl(url, size = 64) {
@@ -97,10 +84,19 @@ async function bootApp() {
     if (isFirstRun || (!customBg && !bookmarks)) {
         customBg = 'https://gitee.com/shangyuhang/Course/raw/main/%E5%A3%81%E7%BA%B89.jpg';
         saveData('yannian_bg', customBg);
+
         if (!bookmarks || bookmarks.length === 0) {
             bookmarks = [
-                { name: 'DeepSeek', url: 'https://chat.deepseek.com', cat: '', tags: ['AI'] },
-                { name: 'Bilibili', url: 'https://www.bilibili.com', cat: '', tags: ['视频'] }
+                { name: 'DeepSeek', url: 'https://chat.deepseek.com/', cat: '', tags: ['AI'] },
+                { name: 'Bilibili', url: 'https://www.bilibili.com/', cat: '', tags: ['视频'] },
+                { name: 'GitHub', url: 'https://github.com/', cat: '', tags: ['编程'] },
+                { name: '知乎', url: 'https://www.zhihu.com/', cat: '', tags: ['社交'] },
+                { name: '小红书', url: 'https://www.xiaohongshu.com/', cat: '', tags: ['社交'] },
+                { name: '据意查句', url: 'https://wantquotes.net/', cat: '工具', tags: ['句子'] },
+                { name: '图表绘制', url: 'https://app.diagrams.net/', cat: '工具', tags: ['图表'] },
+                { name: 'Free Font - 免费商用字体', url: 'https://wangchujiang.com/free-font/', cat: '工具', tags: ['字体'] },
+                { name: '古文岛', url: 'https://www.gushiwen.cn/', cat: '学习', tags: ['古文', '诗词'] },
+                { name: 'OI - Wiki', url: 'https://oi-wiki.org/', cat: '学习', tags: ['编程', '算法'] }
             ];
             saveData('yannian_bookmarks', JSON.stringify(bookmarks));
         }
@@ -185,7 +181,6 @@ function toggleModeView() {
 }
 document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === '/') { isCliMode = !isCliMode; toggleModeView(); } });
 
-// ================= 原地无缝书签态切换及防误触引擎 =================
 let isBookmarkViewActive = false;
 const centerContent = document.getElementById('main-center-view');
 const searchWrapper = document.getElementById('search-wrapper');
@@ -214,16 +209,16 @@ function toggleBookmarkView() {
 }
 
 window.addEventListener('contextmenu', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    e.preventDefault();
     if (isCliMode ||
         e.target.closest('.desktop-zone') ||
         e.target.closest('#dock-container') ||
         e.target.closest('.modal') ||
         e.target.closest('#settings-gear') ||
-        e.target.closest('#bookmark-wrapper') ||
-        e.target.tagName === 'INPUT' ||
-        e.target.tagName === 'TEXTAREA') return;
-
-    e.preventDefault();
+        e.target.closest('#bookmark-wrapper')) {
+        return;
+    }
     if (!isBookmarkViewActive) {
         toggleBookmarkView();
     }
@@ -246,6 +241,30 @@ document.getElementById('settings-gear').addEventListener('click', (e) => {
 });
 centralHub.addEventListener('click', (e) => { if (e.target === centralHub) centralHub.classList.add('hidden'); });
 document.getElementById('close-hub').addEventListener('click', () => centralHub.classList.add('hidden'));
+
+document.getElementById('btn-reset-data').addEventListener('click', () => {
+    if (confirm('⚠️ 警告：此操作将清空所有书签、便签、一言、倒数日及设置，并将其恢复至初始状态。确定要重置吗？')) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('yannian_')) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.get(null, (items) => {
+                const chromeKeys = Object.keys(items).filter(k => k.startsWith('yannian_'));
+                chrome.storage.local.remove(chromeKeys, () => {
+                    window.location.reload();
+                });
+            });
+        } else {
+            window.location.reload();
+        }
+    }
+});
 
 document.querySelectorAll('.hub-sidebar .nav-btn[data-target]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -390,7 +409,6 @@ document.getElementById('btn-add-engine').addEventListener('click', () => {
     } else { alert("名称和查询前缀不能为空！"); }
 });
 
-// ================= Win95 风格书签管理器 =================
 const foldersView = document.getElementById('bm-folders-view');
 const itemsView = document.getElementById('bm-items-view');
 const breadcrumbsContainer = document.getElementById('bm-breadcrumbs');
@@ -402,17 +420,13 @@ bmSearchInput.addEventListener('input', (e) => {
 });
 
 document.getElementById('btn-bm-home').addEventListener('click', () => {
-    currentFolderPath = ''; bmSearchQuery = ''; bmSearchInput.value = '';
-    renderBookmarksView();
+    currentFolderPath = ''; bmSearchQuery = ''; bmSearchInput.value = ''; renderBookmarksView();
 });
 
 document.getElementById('btn-bm-back').addEventListener('click', () => {
-    if (bmSearchQuery) {
-        bmSearchQuery = ''; bmSearchInput.value = ''; renderBookmarksView(); return;
-    }
+    if (bmSearchQuery) { bmSearchQuery = ''; bmSearchInput.value = ''; renderBookmarksView(); return; }
     if (currentFolderPath === '') return;
-    const parts = currentFolderPath.split('/'); parts.pop(); currentFolderPath = parts.join('/');
-    renderBookmarksView();
+    const parts = currentFolderPath.split('/'); parts.pop(); currentFolderPath = parts.join('/'); renderBookmarksView();
 });
 
 function renderBreadcrumbs() {
@@ -446,9 +460,7 @@ function renderBreadcrumbs() {
 function renderBookmarksView() {
     renderBreadcrumbs();
     foldersView.innerHTML = ''; itemsView.innerHTML = '';
-
-    let currentItems = [];
-    let subFolders = new Set();
+    let currentItems = []; let subFolders = new Set();
 
     if (bmSearchQuery) {
         foldersView.style.display = 'none';
@@ -476,20 +488,11 @@ function renderBookmarksView() {
                 const count = bookmarks.filter(b => (b.cat || '') === targetPath || (b.cat || '').startsWith(targetPath + '/')).length;
                 const div = document.createElement('div');
                 div.className = 'win95-item';
-                div.innerHTML = `
-                    <div class="win95-item-info">
-                        ${iconFolder}
-                        <span class="bm-link-text" style="font-weight: bold; cursor: pointer;">${folderName}</span>
-                    </div>
-                    <div class="win95-item-actions">
-                        <span style="font-size: 12px; color: inherit; padding-right: 5px;">${count} 项</span>
-                    </div>`;
+                div.innerHTML = `<div class="win95-item-info">${iconFolder}<span class="bm-link-text" style="font-weight: bold; cursor: pointer;">${folderName}</span></div><div class="win95-item-actions"><span style="font-size: 12px; color: inherit; padding-right: 5px;">${count} 项</span></div>`;
                 div.addEventListener('click', () => { currentFolderPath = targetPath; renderBookmarksView(); });
                 foldersView.appendChild(div);
             });
-        } else {
-            foldersView.style.display = 'none';
-        }
+        } else { foldersView.style.display = 'none'; }
     }
 
     if (currentItems.length > 0) {
@@ -498,7 +501,6 @@ function renderBookmarksView() {
         currentItems.forEach((bm) => {
             const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url, 32);
             const tagsHtml = bm.tags && bm.tags.length > 0 ? bm.tags.map(t => `<span class="win95-tag">${t}</span>`).join('') : '';
-
             htmlContent += `
                 <div class="win95-item" data-url="${bm.url}">
                     <div class="win95-item-info">
@@ -514,20 +516,15 @@ function renderBookmarksView() {
         });
         itemsView.innerHTML = htmlContent;
 
-        // 绑定全行跳转与精确Tag筛选
         itemsView.querySelectorAll('.win95-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 if (e.target.closest('.win95-item-actions')) return;
-                if (e.target.classList.contains('win95-tag')) {
-                    bmSearchQuery = e.target.textContent.trim();
-                    bmSearchInput.value = bmSearchQuery;
-                    renderBookmarksView();
-                    return;
-                }
-                const url = item.getAttribute('data-url');
-                if (url) window.location.href = url;
+                if (e.target.classList.contains('win95-tag')) { bmSearchQuery = e.target.textContent.trim(); bmSearchInput.value = bmSearchQuery; renderBookmarksView(); return; }
+                const url = item.getAttribute('data-url'); if (url) window.location.href = url;
             });
         });
+
+        // 此处的重复变量声明已被删除！
         itemsView.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => openBmModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
         itemsView.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', (e) => delBookmark(parseInt(e.currentTarget.getAttribute('data-idx')))));
     } else {
@@ -590,12 +587,9 @@ document.getElementById('btn-export-bm').addEventListener('click', () => {
 
     function renderTree(node, indent) {
         let str = "";
-        node.children.forEach(c => {
-            str += `${indent}<DT><H3>${c.name}</H3>\n${indent}<DL><p>\n` + renderTree(c, indent + "    ") + `${indent}</DL><p>\n`;
-        });
+        node.children.forEach(c => { str += `${indent}<DT><H3>${c.name}</H3>\n${indent}<DL><p>\n` + renderTree(c, indent + "    ") + `${indent}</DL><p>\n`; });
         node.bookmarks.forEach(b => {
-            let tagsAttr = b.tags && b.tags.length ? ` TAGS="${b.tags.join(',')}"` : '';
-            let iconAttr = b.icon ? ` ICON="${b.icon}"` : '';
+            let tagsAttr = b.tags && b.tags.length ? ` TAGS="${b.tags.join(',')}"` : ''; let iconAttr = b.icon ? ` ICON="${b.icon}"` : '';
             str += `${indent}<DT><A HREF="${b.url}"${tagsAttr}${iconAttr}>${b.name}</A>\n`;
         });
         return str;
@@ -616,27 +610,22 @@ document.getElementById('bm-import-input').addEventListener('change', function (
             const parser = new DOMParser();
             const doc = parser.parseFromString(e.target.result, 'text/html');
             let newBookmarks = [];
-
             function parseDl(dlNode, currentPath) {
                 for (let child of dlNode.children) {
                     if (child.tagName === 'DT') {
-                        const h3 = child.querySelector('H3');
-                        const a = child.querySelector('A');
+                        const h3 = child.querySelector('H3'); const a = child.querySelector('A');
                         if (h3) {
-                            const folderName = h3.textContent.trim();
-                            const nextPath = currentPath ? currentPath + '/' + folderName : folderName;
+                            const folderName = h3.textContent.trim(); const nextPath = currentPath ? currentPath + '/' + folderName : folderName;
                             let nextDl = child.querySelector('DL') || child.nextElementSibling;
                             if (nextDl && nextDl.tagName === 'DL') parseDl(nextDl, nextPath);
                         } else if (a) {
-                            const url = a.getAttribute('href'); const name = a.textContent.trim();
-                            const icon = a.getAttribute('icon') || '';
+                            const url = a.getAttribute('href'); const name = a.textContent.trim(); const icon = a.getAttribute('icon') || '';
                             const tags = (a.getAttribute('tags') || '').split(/[,，]/).map(t => t.trim()).filter(t => t);
                             if (url && !url.startsWith('chrome://')) newBookmarks.push({ name, url, cat: currentPath, icon, tags });
                         }
                     }
                 }
             }
-
             const rootDl = doc.querySelector('DL');
             if (rootDl) {
                 parseDl(rootDl, ''); bookmarks = newBookmarks; saveData('yannian_bookmarks', JSON.stringify(bookmarks));
@@ -655,41 +644,15 @@ function renderNotes() {
     notes.forEach((note, idx) => {
         const safeNote = String(note);
         if (idx === inlineEditingNoteIndex) {
-            hubHtml += `
-                <div class="item-card" style="padding: 0; border: none; background: transparent;">
-                    <div class="inline-edit-wrapper">
-                        <textarea class="inline-edit-textarea" id="inline-note-${idx}">${safeNote}</textarea>
-                        <div class="inline-edit-actions">
-                            <button class="icon-btn-sm cancel cancel-inline-btn" title="取消" style="color:#ff4d4f;">${iconCloseStr}</button>
-                            <button class="icon-btn-sm save save-inline-btn" data-idx="${idx}" title="保存" style="color:var(--theme-color);">${iconCheckStr}</button>
-                        </div>
-                    </div>
-                </div>`;
+            hubHtml += `<div class="item-card" style="padding: 0; border: none; background: transparent;"><div class="inline-edit-wrapper"><textarea class="inline-edit-textarea" id="inline-note-${idx}">${safeNote}</textarea><div class="inline-edit-actions"><button class="icon-btn-sm cancel cancel-inline-btn" title="取消" style="color:#ff4d4f;">${iconCloseStr}</button><button class="icon-btn-sm save save-inline-btn" data-idx="${idx}" title="保存" style="color:var(--theme-color);">${iconCheckStr}</button></div></div></div>`;
         } else {
             hubHtml += `<div class="item-card"><div style="flex:1; word-break: break-all; padding-right:15px; line-height:1.6; color: #333; white-space: pre-wrap;">${safeNote}</div><div class="item-actions"><button class="action-btn edit-note-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="action-btn del del-note-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
         }
 
         if (idx === deskEditingNoteIndex) {
-            dtHtml += `
-                <div class="dt-card" style="padding: 10px;">
-                    <div class="inline-edit-wrapper" style="flex-direction: column;">
-                        <textarea class="desk-note-edit-area" id="desk-inline-note-${idx}">${safeNote}</textarea>
-                        <div class="inline-edit-actions" style="position: absolute; bottom: 8px; right: 8px;">
-                            <button class="icon-btn-sm cancel cancel-desk-inline" style="background: rgba(255,255,255,0.1); color: #fff;" title="取消">${iconCloseStr}</button>
-                            <button class="icon-btn-sm save save-desk-inline" data-idx="${idx}" style="background: var(--theme-color); color: #fff;" title="保存">${iconCheckStr}</button>
-                        </div>
-                    </div>
-                </div>`;
+            dtHtml += `<div class="dt-card"><div class="inline-edit-wrapper" style="flex-direction: column;"><textarea class="desk-note-edit-area" id="desk-inline-note-${idx}">${safeNote}</textarea><div class="inline-edit-actions" style="position: absolute; bottom: 8px; right: 8px;"><button class="icon-btn-sm cancel cancel-desk-inline" style="background: rgba(255,255,255,0.1); color: #fff;" title="取消">${iconCloseStr}</button><button class="icon-btn-sm save save-desk-inline" data-idx="${idx}" style="background: var(--theme-color); color: #fff;" title="保存">${iconCheckStr}</button></div></div></div>`;
         } else {
-            dtHtml += `
-                <div class="dt-card">
-                    <div class="dt-note-item">${safeNote.replace(/\n/g, '<br>')}</div>
-                    <div class="desk-note-actions">
-                        <button class="copy-desk-btn" data-idx="${idx}" title="复制">${iconCopyStr}</button>
-                        <button class="edit-desk-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button>
-                        <button class="del desk-del-btn" data-idx="${idx}" title="删除">${iconDelStr}</button>
-                    </div>
-                </div>`;
+            dtHtml += `<div class="dt-card"><div class="dt-note-item">${safeNote.replace(/\n/g, '<br>')}</div><div class="desk-note-actions"><button class="copy-desk-btn" data-idx="${idx}" title="复制">${iconCopyStr}</button><button class="edit-desk-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="del desk-del-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
         }
     });
 
@@ -707,22 +670,16 @@ function renderNotes() {
     hubList.querySelectorAll('.save-inline-btn').forEach(btn => btn.addEventListener('click', (e) => { const idx = parseInt(e.currentTarget.getAttribute('data-idx')); const txt = document.getElementById(`inline-note-${idx}`).value.trim(); if (txt) notes[idx] = txt; else notes.splice(idx, 1); saveData('yannian_notes', JSON.stringify(notes)); inlineEditingNoteIndex = -1; renderNotes(); }));
 }
 
-document.getElementById('btn-add-note').addEventListener('click', () => {
-    const text = document.getElementById('hub-note-input').value.trim();
-    if (text) { notes.unshift(text); saveData('yannian_notes', JSON.stringify(notes)); renderNotes(); document.getElementById('hub-note-input').value = ''; }
-});
+document.getElementById('btn-add-note').addEventListener('click', () => { const text = document.getElementById('hub-note-input').value.trim(); if (text) { notes.unshift(text); saveData('yannian_notes', JSON.stringify(notes)); renderNotes(); document.getElementById('hub-note-input').value = ''; } });
 
 function openCdModal(idx) {
     editingCdIndex = idx;
     if (idx >= 0) {
-        const cd = countdowns[idx];
-        document.getElementById('cd-modal-title').textContent = '编辑倒数日';
-        document.getElementById('cd-title').value = cd.title;
-        document.getElementById('cd-date').value = cd.date;
+        const cd = countdowns[idx]; document.getElementById('cd-modal-title').textContent = '编辑倒数日';
+        document.getElementById('cd-title').value = cd.title; document.getElementById('cd-date').value = cd.date;
     } else {
         document.getElementById('cd-modal-title').textContent = '新增倒数日';
-        document.getElementById('cd-title').value = '';
-        document.getElementById('cd-date').value = '';
+        document.getElementById('cd-title').value = ''; document.getElementById('cd-date').value = '';
     }
     document.getElementById('cd-modal').classList.remove('hidden');
 }
@@ -731,14 +688,10 @@ document.getElementById('btn-add-cd').addEventListener('click', () => openCdModa
 document.getElementById('btn-close-cd-modal').addEventListener('click', () => document.getElementById('cd-modal').classList.add('hidden'));
 
 document.getElementById('btn-save-cd').addEventListener('click', () => {
-    const title = document.getElementById('cd-title').value.trim();
-    const dateStr = document.getElementById('cd-date').value;
+    const title = document.getElementById('cd-title').value.trim(); const dateStr = document.getElementById('cd-date').value;
     if (title && dateStr && !isNaN(new Date(dateStr).getTime())) {
-        if (editingCdIndex >= 0) { countdowns[editingCdIndex] = { title, date: dateStr }; }
-        else { countdowns.push({ title, date: dateStr }); }
-        saveData('yannian_cds', JSON.stringify(countdowns));
-        document.getElementById('cd-modal').classList.add('hidden');
-        renderCountdowns();
+        if (editingCdIndex >= 0) { countdowns[editingCdIndex] = { title, date: dateStr }; } else { countdowns.push({ title, date: dateStr }); }
+        saveData('yannian_cds', JSON.stringify(countdowns)); document.getElementById('cd-modal').classList.add('hidden'); renderCountdowns();
     } else { alert("信息不完整或日期格式有误"); }
 });
 
@@ -746,21 +699,11 @@ function renderCountdowns() {
     const hubList = document.getElementById('hub-cd-list'); const dtList = document.getElementById('desktop-right-zone');
     let hubHtml = ''; let dtHtml = '';
     countdowns.forEach((cd, idx) => {
-        const diff = Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        const finalDays = diff > 0 ? diff : 0;
+        const diff = Math.ceil((new Date(cd.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); const finalDays = diff > 0 ? diff : 0;
         hubHtml += `<div class="item-card"><div class="item-info" style="flex:1;"><span style="font-weight: bold; color: #333; width: 100px;">${cd.title}</span><span class="highlight-num" style="font-size:1.5rem; margin-right:10px;">${finalDays}</span>天<span style="color:rgba(0,0,0,0.4); font-size:0.8rem; margin-left:10px;">(${cd.date})</span></div><div class="item-actions"><button class="action-btn edit-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="action-btn del del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
-        dtHtml += `
-            <div class="dt-card">
-                <div class="dt-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${cd.title}</span></div>
-                <div class="dt-content"><span>${finalDays}</span> <span>天</span></div>
-                <div class="desk-cd-actions">
-                    <button class="edit-desk-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button>
-                    <button class="del desk-del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button>
-                </div>
-            </div>`;
+        dtHtml += `<div class="dt-card"><div class="dt-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${cd.title}</span></div><div class="dt-content"><span>${finalDays}</span> <span>天</span></div><div class="desk-cd-actions"><button class="edit-desk-cd-btn" data-idx="${idx}" title="编辑">${iconEditStr}</button><button class="del desk-del-cd-btn" data-idx="${idx}" title="删除">${iconDelStr}</button></div></div>`;
     });
     hubList.innerHTML = hubHtml; dtList.innerHTML = dtHtml;
-
     hubList.querySelectorAll('.edit-cd-btn').forEach(btn => btn.addEventListener('click', (e) => openCdModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
     hubList.querySelectorAll('.del-cd-btn').forEach(btn => btn.addEventListener('click', (e) => { countdowns.splice(parseInt(e.currentTarget.getAttribute('data-idx')), 1); saveData('yannian_cds', JSON.stringify(countdowns)); renderCountdowns(); }));
     dtList.querySelectorAll('.edit-desk-cd-btn').forEach(btn => btn.addEventListener('click', (e) => openCdModal(parseInt(e.currentTarget.getAttribute('data-idx')))));
