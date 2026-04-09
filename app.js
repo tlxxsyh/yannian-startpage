@@ -24,7 +24,7 @@ const iconCopyStr = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" heigh
 const iconCheckStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 const iconCloseStr = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
-// === 【已彻底改回：像素级黄色 Win95 文件夹图标】 ===
+// Win95 风格黄色文件夹
 const iconFolder = `<svg width="18" height="18" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <g shape-rendering="crispEdges">
     <rect x="1" y="2" width="6" height="1" fill="#000"/>
@@ -41,18 +41,35 @@ const iconFolder = `<svg width="18" height="18" viewBox="0 0 16 16" xmlns="http:
   </g>
 </svg>`;
 
+// Base64 编码折角白纸图标
+const defaultWebIcon = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZD0iTTIgMWg4bDQgNHYxMEgyVjF6IiBmaWxsPSIjZmZmIiBzdHJva2U9IiMwMDAiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyIvPjxwYXRoIGQ9Ik0xMCAxdjRoNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzaGFwZS1yZW5kZXJpbmc9ImNyaXNwRWRnZXMiLz48L3N2Zz4=";
+
 const iconHome = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 
-function getFaviconUrl(url, size = 64) {
+function getFaviconUrl(url) {
     try {
         let validUrl = url.startsWith('http') ? url : 'https://' + url;
         const domain = new URL(validUrl).hostname;
+
+        // 1. 国内大厂特判，百分百秒开且无需任何 API
+        // 🔥 这里就是为你专门定制的 DeepSeek 蓝色 Base64 图标
+        if (domain.includes('deepseek.com')) return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjciIGZpbGw9ImJsdWUiIHN0cm9rZT0iYmxhY2siIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyIvPjxwYXRoIGQ9Ik00IDRoNWE0IDQgMCAwIDEgMCA4SDRWNHoiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTUgNnY0aDJhMiAyIDAgMCAwIDAtNEg1eiIgZmlsbD0iYmx1ZSIvPjwvc3ZnPg==';
+
         if (domain.includes('xiaohongshu.com')) return 'https://www.xiaohongshu.com/favicon.ico';
         if (domain.includes('bilibili.com')) return 'https://www.bilibili.com/favicon.ico';
         if (domain.includes('zhihu.com')) return 'https://static.zhihu.com/heifetz/favicon.ico';
         if (domain.includes('github.com')) return 'https://github.com/favicon.ico';
-        return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
-    } catch (e) { return 'https://www.google.com/favicon.ico'; }
+        if (domain.includes('baidu.com')) return 'https://www.baidu.com/favicon.ico';
+        if (domain.includes('weibo.com')) return 'https://weibo.com/favicon.ico';
+        if (domain.includes('taobao.com')) return 'https://www.taobao.com/favicon.ico';
+        if (domain.includes('jd.com')) return 'https://www.jd.com/favicon.ico';
+        if (domain.includes('douyin.com')) return 'https://www.douyin.com/favicon.ico';
+
+        // 2. 抛弃中间商，直接请求网站自带的根目录图标
+        return `https://${domain}/favicon.ico`;
+    } catch (e) {
+        return defaultWebIcon;
+    }
 }
 
 function safeParse(str, defaultVal) {
@@ -296,10 +313,17 @@ function renderDock() {
 
     document.getElementById('dock-container').style.display = 'block';
     rootBookmarks.forEach(bm => {
-        const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url, 64);
+        const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url);
         const div = document.createElement('div');
         div.className = 'dock-item'; div.title = bm.name;
-        div.innerHTML = `<img src="${iconSrc}" onerror="this.src='https://www.google.com/favicon.ico'">`;
+        // 移除内联 onerror，仅保留纯净 src
+        div.innerHTML = `<img src="${iconSrc}">`;
+
+        // 扩展合规方案：通过 JS 监听图片错误
+        div.querySelector('img').addEventListener('error', function () {
+            this.src = defaultWebIcon;
+        }, { once: true });
+
         div.onclick = () => window.location.href = bm.url;
         dockInner.appendChild(div);
     });
@@ -323,7 +347,12 @@ function renderEngineDropdown() {
     customEngines.forEach((engine, idx) => {
         const div = document.createElement('div');
         div.className = 'engine-dropdown-item';
-        div.innerHTML = `<img src="${engine.icon}" onerror="this.src='https://www.google.com/favicon.ico'"><span>${engine.name}</span>`;
+        div.innerHTML = `<img src="${engine.icon}"><span>${engine.name}</span>`;
+
+        div.querySelector('img').addEventListener('error', function () {
+            this.src = defaultWebIcon;
+        }, { once: true });
+
         div.onmousedown = (e) => { e.preventDefault(); currentEngineIdx = idx; updateEngineView(); engineDropdown.classList.add('hidden'); searchInput.focus(); };
         engineDropdown.appendChild(div);
     });
@@ -400,11 +429,23 @@ function renderEngines() {
     customEngines.forEach((engine, idx) => {
         container.insertAdjacentHTML('beforeend', `
             <div class="item-card">
-                <div class="item-info"><img src="${engine.icon}" onerror="this.src='https://www.google.com/favicon.ico'"> <span style="font-weight: bold;">${engine.name}</span> <span style="font-size: 0.8rem; color:#888;">${engine.url}</span></div>
+                <div class="item-info">
+                    <img src="${engine.icon}"> 
+                    <span style="font-weight: bold;">${engine.name}</span> 
+                    <span style="font-size: 0.8rem; color:#888;">${engine.url}</span>
+                </div>
                 <div class="item-actions">${customEngines.length > 1 ? `<button class="action-btn del del-engine-btn" data-idx="${idx}" title="删除">${iconDelStr}</button>` : ''}</div>
             </div>
         `);
     });
+
+    // 给所有生成的图片绑定错误监听
+    container.querySelectorAll('.item-info img').forEach(img => {
+        img.addEventListener('error', function () {
+            this.src = defaultWebIcon;
+        }, { once: true });
+    });
+
     container.querySelectorAll('.del-engine-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             customEngines.splice(parseInt(e.currentTarget.getAttribute('data-idx')), 1);
@@ -413,10 +454,11 @@ function renderEngines() {
         });
     });
 }
+
 document.getElementById('btn-add-engine').addEventListener('click', () => {
     const name = document.getElementById('engine-name').value.trim(); const url = document.getElementById('engine-url').value.trim(); let icon = document.getElementById('engine-icon-url').value.trim();
     if (name && url) {
-        if (!icon) { try { icon = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`; } catch (e) { icon = 'https://www.google.com/favicon.ico'; } }
+        if (!icon) { try { icon = `https://${new URL(url).hostname}/favicon.ico`; } catch (e) { icon = defaultWebIcon; } }
         customEngines.push({ name, url, icon }); saveData('yannian_engines', JSON.stringify(customEngines)); renderEngines();
         document.getElementById('engine-name').value = ''; document.getElementById('engine-url').value = ''; document.getElementById('engine-icon-url').value = '';
     } else { alert("名称和查询前缀不能为空！"); }
@@ -512,12 +554,12 @@ function renderBookmarksView() {
         itemsView.style.display = 'flex';
         let htmlContent = '';
         currentItems.forEach((bm) => {
-            const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url, 32);
+            const iconSrc = bm.icon ? bm.icon : getFaviconUrl(bm.url);
             const tagsHtml = bm.tags && bm.tags.length > 0 ? bm.tags.map(t => `<span class="win95-tag">${t}</span>`).join('') : '';
             htmlContent += `
                 <div class="win95-item" data-url="${bm.url}">
                     <div class="win95-item-info">
-                        <img src="${iconSrc}" onerror="this.src='https://www.google.com/favicon.ico'">
+                        <img src="${iconSrc}">
                         <span class="bm-link-text">${bm.name}</span>
                         ${tagsHtml}
                     </div>
@@ -528,6 +570,13 @@ function renderBookmarksView() {
                 </div>`;
         });
         itemsView.innerHTML = htmlContent;
+
+        // 绑定 error 监听器
+        itemsView.querySelectorAll('.win95-item-info img').forEach(img => {
+            img.addEventListener('error', function () {
+                this.src = defaultWebIcon;
+            }, { once: true });
+        });
 
         itemsView.querySelectorAll('.win95-item').forEach(item => {
             item.addEventListener('click', (e) => {
